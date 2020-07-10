@@ -1,6 +1,24 @@
 import React, { Component } from 'react';
 import * as d3 from 'd3';
 
+var w = window.innerWidth,
+    h = window.innerHeight
+
+
+var svg = d3.select("body").append("svg").attr({
+    width: w,
+    height: h
+});
+
+// // We're passing in a function in d3.max to tell it what we're maxing (x value)
+// var xScale = d3.scaleLinear()
+// .domain([0, d3.max(dataset, function (d) { return d.x + 10; })])
+// .range([margin.left, w - margin.right]);  // Set margins for x specific
+
+// // We're passing in a function in d3.max to tell it what we're maxing (y value)
+// var yScale = d3.scaleLinear()
+// .domain([0, d3.max(dataset, function (d) { return d.y + 10; })])
+// .range([margin.top, h - margin.bottom]);  // Set margins for y specific
 
 export default class Approval extends Component{
     constructor(props) {
@@ -56,7 +74,23 @@ export default class Approval extends Component{
         this.setData(await csvSort)
         console.log('trumpApproval: ', this.state.trumpApproval)
         return await csvSort;
-};
+    };
+
+    //only works with top level element
+    //need to find equivelent to document.querySelectorAll('.trump-ratings').target.closest('.approval')
+    handleMouseOver(d, i) {  // Add interactivity
+        // Use D3 to select element, change color and size
+        d3.select(this)
+            .attr("fill", "orange")
+            .attr("r", d => 10 )
+        console.log('hover')
+    };
+
+    handleMouseOut(d, i) {
+        // Use D3 to select element, change color back to normal
+        d3.select(this)
+            .attr("r", d => 2);
+    };
 
     chartRender = async (data, id, div, measure, color) => {
         const filtered = await data.filter(data => data.subgroup == "All polls");
@@ -65,6 +99,8 @@ export default class Approval extends Component{
             .append("svg")
             .attr("width", this.state.width)
             .attr("height", this.state.height)
+            .attr("padding", '10px')
+            .attr("class", 'trump-rating')
             .selectAll("circle")
             .data(filtered)
             .enter()
@@ -80,17 +116,35 @@ export default class Approval extends Component{
             })
             .attr("r", d => 2 )
             .style("fill", d => color)
+            .on("mouseover", this.handleMouseOver)
+            .on("mouseout", this.handleMouseOut)
     };
 
     render() {
         // const { width, height, trumpApproval } = this.state; 
         return (
-            <div>
-                <div id='approval'></div>
-                <div id='disapproval'></div>
+            <div id='trumpApproval' style={styles.trumpApproval}>
+                <div id='approval' style={styles.approval}></div>
+                <div id='disapproval' style={styles.disapproval}></div>
             </div>
         )
     };
+
+    
 };
 
+const styles = {
+    trumpApproval: {
+        margin: 10,
+        padding:10
+    },
+    approval: {
+        display: 'absolute',
+    },
+    disapproval: {
+        display: 'absolute',
+        marginTop: '-450px',
+        
+    }
+}
             

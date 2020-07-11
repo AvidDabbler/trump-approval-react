@@ -32,9 +32,7 @@ export default class Approval extends Component{
     
     async componentDidMount() {
         let data = await this.processData();
-        this.chartRender(await data, 'approve', "#approval", 'approve_estimate', 'red');
-        this.chartRender(await data, 'disapprove', "#disapproval", 'disapprove_estimate', 'blue');
-
+        this.chartRender(await data, 'approve', "#trumpApproval");
     };
 
     fetchedData = async (url) => {
@@ -92,30 +90,52 @@ export default class Approval extends Component{
             .attr("r", d => 2);
     };
 
-    chartRender = async (data, id, div, measure, color) => {
+    chartRender = async (data, id, div) => {
         const filtered = await data.filter(data => data.subgroup == "All polls");
         const flength = await filtered.length;
-        d3.select(div)
-            .append("svg")
-            .attr("width", this.state.width)
-            .attr("height", this.state.height)
-            .attr("padding", '10px')
-            .attr("class", 'trump-rating')
-            .selectAll("circle")
+        let svgChart = d3.select(div)
+            .append('svg')
+            .attr("width", '100%')
+            .attr("height", 450)
+            .selectAll('circle')
+            .data(filtered).enter();
+        
+        // svgChart.attr("width", this.state.width)
+        //     .attr("height", this.state.height)
+        //     .attr("class", 'trump-rating')
+
+        // approval render
+        svgChart.append('circle')
             .data(filtered)
-            .enter()
-            .append("circle")
             .attr("class", d => id + '_' + d.subgroup)
             .attr("id", d => id + '_' + d.modeldate)
             .attr("cx", (d, i) => {
                 return (i)*(this.state.width/flength);
             })
             .attr("cy", (d) => {
-                const meas = eval( 'd.' + measure);
+                const meas = eval( 'd.' + 'approve_estimate');
                 return ((100-meas) * (this.state.height/100));
             })
             .attr("r", d => 2 )
-            .style("fill", d => color)
+            .style("fill", d => 'red')
+            .on("mouseover", this.handleMouseOver)
+            .on("mouseout", this.handleMouseOut)
+
+
+        // disapproval render
+        svgChart.append("circle")
+            .data(filtered)
+            .attr("class", d => id + '_' + d.subgroup)
+            .attr("id", d => id + '_' + d.modeldate)
+            .attr("cx", (d, i) => {
+                return (i)*(this.state.width/flength);
+            })
+            .attr("cy", (d) => {
+                const meas = eval( 'd.' + 'disapprove_estimate');
+                return ((100-meas) * (this.state.height/100));
+            })
+            .attr("r", d => 2 )
+            .style("fill", d => 'blue')
             .on("mouseover", this.handleMouseOver)
             .on("mouseout", this.handleMouseOut)
     };
@@ -123,10 +143,7 @@ export default class Approval extends Component{
     render() {
         // const { width, height, trumpApproval } = this.state; 
         return (
-            <div id='trumpApproval' style={styles.trumpApproval}>
-                <div id='approval' style={styles.approval}></div>
-                <div id='disapproval' style={styles.disapproval}></div>
-            </div>
+            <div id='trumpApproval' style={styles.trumpApproval}></div>
         )
     };
 
@@ -136,7 +153,9 @@ export default class Approval extends Component{
 const styles = {
     trumpApproval: {
         margin: 10,
-        padding:10
+        padding: 10,
+        width: '100%',
+        height:450
     },
     approval: {
         display: 'absolute',

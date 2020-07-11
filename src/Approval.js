@@ -94,16 +94,25 @@ export default class Approval extends Component{
     };
 
     setData(data) {
+        this.setDates(data)
         this.setState({ trumpApproval: data });
         return data;
     };
     
     setDates(data) {
+        data.map(el => {
+            el['statDate'] = new Date(el.old_date);
+        });
         this.setState({
-            minDate: data[1].old_date,
-            maxDate: data[data.length-1].old_date
-        },()=>console.log('state', this.state))
-    }
+            minDate: data[1].statDate,
+            maxDate: data[data.length-1].statDate
+        })
+        this.filterDates(data)
+    };
+
+    filterDates(data) {
+        data.filter(el => el.statDate>=this.state.minDate && el.statDate <= this.state.maxDate )
+    };
 
     processData = async () => {
         let csvParse = await d3.csv(await 'https://projects.fivethirtyeight.com/trump-approval-data/approval_topline.csv', data => {
@@ -117,9 +126,10 @@ export default class Approval extends Component{
         });
         let csvSort = await csvParse.sort((a, b) => a.modeldate - b.modeldate);
         this.setData(await csvSort)
-        this.setDates(this.state.trumpApproval)
-
-        console.log('trumpApproval: ', this.state.trumpApproval)
+        // this.setDates(this.state.trumpApproval)
+        // let csvDates = (min, max) => { 
+        //     await csvSort.filter(el => el.old_date)
+        // }
         return await csvSort;
     };
 

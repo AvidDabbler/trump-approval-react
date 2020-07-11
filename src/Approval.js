@@ -2,25 +2,6 @@ import React, { Component } from 'react';
 import * as d3 from 'd3';
 import { findByLabelText } from '@testing-library/react';
 
-var w = window.innerWidth,
-    h = window.innerHeight
-
-
-var svg = d3.select("body").append("svg").attr({
-    width: w,
-    height: h
-});
-
-// // We're passing in a function in d3.max to tell it what we're maxing (x value)
-// var xScale = d3.scaleLinear()
-// .domain([0, d3.max(dataset, function (d) { return d.x + 10; })])
-// .range([margin.left, w - margin.right]);  // Set margins for x specific
-
-// // We're passing in a function in d3.max to tell it what we're maxing (y value)
-// var yScale = d3.scaleLinear()
-// .domain([0, d3.max(dataset, function (d) { return d.y + 10; })])
-// .range([margin.top, h - margin.bottom]);  // Set margins for y specific
-
 
 class Slider extends Component {
     constructor(props) {
@@ -68,6 +49,7 @@ export default class Approval extends Component{
     async componentDidMount() {
         let data = await this.processData();
         this.chartRender(await data, 'approve', "#trumpApproval");
+        console.log(this.state)
     };
 
     fetchedData = async (url) => {
@@ -154,6 +136,12 @@ export default class Approval extends Component{
     chartRender = async (data, id, div) => {
         const filtered = await data.filter(data => data.subgroup == "All polls");
         const flength = await filtered.length;
+        let w = window.innerWidth;
+        let h = window.innerHeight;
+        var svg = d3.select("body").append("svg").attr({
+            width: w,
+            height: h
+        });
 
         let svgChart = d3.select(div)
             .append('svg')

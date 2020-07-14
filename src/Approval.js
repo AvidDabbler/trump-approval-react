@@ -210,8 +210,6 @@ export default class Approval extends Component{
         return await csvSort;
     };
 
-    
-
     //only works with top level element
     //need to find equivelent to document.querySelectorAll('.trump-ratings').target.closest('.approval')
     handleMouseOver(d, i) {  // Add interactivity
@@ -297,8 +295,6 @@ export default class Approval extends Component{
         
     };
 
-
-
     render() {
         // const { width, height, trumpApproval } = this.state; 
       console.log(this.state)
@@ -307,9 +303,20 @@ export default class Approval extends Component{
             {/* <DateSlider /> */}
             <form>
               <label>Start Date: </label>
-              <input id='start' type="date" value={this.state.minDate}></input>
+                    <input
+                        id='start' type="date"
+                        value={this.state.minDate}
+                        min={this.state.minDate}
+                        max={this.state.maxDate}
+                    ></input>
               <label>End Date: </label>
-              <input id='end' type="date" value={this.state.maxDate}></input>
+                    <input
+                        id='end'
+                        type="date"
+                        value={this.state.maxDate}
+                        min={this.state.minDate}
+                        max={this.state.maxDate}
+                    ></input>
             </form>
                 <div id='trumpApproval' style={styles.trumpApproval}></div>
             </div>

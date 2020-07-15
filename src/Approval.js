@@ -1,124 +1,5 @@
 import React, { Component } from 'react';
 import * as d3 from 'd3';
-// import { findByLabelText } from '@testing-library/react';
-// import { Slider, Rail, Handles, Tracks, Ticks } from 'react-compound-slider';
-
-
-
-// const sliderStyle = {
-//     position: 'relative',
-//     width: '100%',
-//   }
-  
-//   const defaultValues = [250, 350]
-  
-//   class Example extends Component {
-//     state = {
-//       domain: [200, 500],
-//       values: defaultValues.slice(),
-//       update: defaultValues.slice(),
-//       reversed: false,
-//     }
-  
-//     onUpdate = update => {
-//       this.setState({ update })
-//     }
-  
-//     onChange = values => {
-//       this.setState({ values })
-//     }
-  
-//     setDomain = domain => {
-//       this.setState({ domain })
-//     }
-  
-//     toggleReverse = () => {
-//       this.setState(prev => ({ reversed: !prev.reversed }))
-//     }
-  
-//     render() {
-//       const {
-//         state: { domain, values, update, reversed },
-//       } = this
-  
-//       return (
-//         <div style={{ height: 150, width: '100%' }}>
-//           <button
-//             onClick={() => {
-//               this.onChange([200, 300])
-//               this.onUpdate([200, 300])
-//             }}
-//           >
-//             SET VALUES [200, 300]
-//           </button>
-//           <button
-//             onClick={() => {
-//               this.onChange([350, 450])
-//               this.onUpdate([350, 450])
-//             }}
-//           >
-//             SET VALUES [350, 450]
-//           </button>
-//           <button onClick={() => this.toggleReverse()}>
-//             {reversed ? 'DISPLAY LOW TO HIGH' : 'DISPLAY HIGH TO LOW'}
-//           </button>
-//           <ValueViewer values={values} update={update} />
-//           <Slider
-//             mode={2}
-//             step={1}
-//             domain={domain}
-//             reversed={reversed}
-//             rootStyle={sliderStyle}
-//             onUpdate={this.onUpdate}
-//             onChange={this.onChange}
-//             values={values}
-//           >
-//             <Rail>
-//               {({ getRailProps }) => <SliderRail getRailProps={getRailProps} />}
-//             </Rail>
-//             <Handles>
-//               {({ handles, getHandleProps }) => (
-//                 <div className="slider-handles">
-//                   {handles.map(handle => (
-//                     <Handle
-//                       key={handle.id}
-//                       handle={handle}
-//                       domain={domain}
-//                       getHandleProps={getHandleProps}
-//                     />
-//                   ))}
-//                 </div>
-//               )}
-//             </Handles>
-//             <Tracks left={false} right={false}>
-//               {({ tracks, getTrackProps }) => (
-//                 <div className="slider-tracks">
-//                   {tracks.map(({ id, source, target }) => (
-//                     <Track
-//                       key={id}
-//                       source={source}
-//                       target={target}
-//                       getTrackProps={getTrackProps}
-//                     />
-//                   ))}
-//                 </div>
-//               )}
-//             </Tracks>
-//             <Ticks count={10}>
-//               {({ ticks }) => (
-//                 <div className="slider-ticks">
-//                   {ticks.map(tick => (
-//                     <Tick key={tick.id} tick={tick} count={ticks.length} />
-//                   ))}
-//                 </div>
-//               )}
-//             </Ticks>
-//           </Slider>
-//         </div>
-//       )
-//     }
-//   }
-
 
 export default class Approval extends Component{
     constructor(props) {
@@ -128,6 +9,9 @@ export default class Approval extends Component{
             height: 450,
         };
         // this.chartRef = React.createRef();
+        this.dateChange= this.dateChange.bind(this)
+        this.updateMax= this.updateMax.bind(this)
+        this.updateMin= this.updateMin.bind(this)
     }
     
     async componentDidMount() {
@@ -182,7 +66,9 @@ export default class Approval extends Component{
         });
         this.setState({
             minDate: this.yyyymmdd(data[1].statDate),
-            maxDate: this.yyyymmdd(data[data.length-1].statDate)
+            maxDate: this.yyyymmdd(data[data.length-1].statDate),
+            minTime: data[1].statDate,
+            maxTime: data[data.length-1].statDate
         })
         this.filterDates(data)
     };
@@ -295,9 +181,35 @@ export default class Approval extends Component{
         
     };
 
+    dateFilter() {
+        // return this.state.trumpApproval.filter(item => {
+        //     item.
+        // })
+    }
+
+    updateMin(ev) {
+        this.setState({
+            minDate: ev.target.value,
+            minTime: new Date(ev.target.value)
+        }, console.log(this.state))
+    }
+    
+    updateMax(ev) {
+        this.setState({
+            maxDate: ev.target.value,
+            maxTime: new Date(ev.target.value)
+        }, console.log(this.state))
+    }
+
+    dateChange() {
+        console.log(this.state);
+        
+    }
+    
+
     render() {
-        // const { width, height, trumpApproval } = this.state; 
-      console.log(this.state)
+        const { minDate, maxDate } = this.state; 
+        console.log(this.state)
         return (
             <div id='approvalContainer'>
             {/* <DateSlider /> */}
@@ -305,19 +217,24 @@ export default class Approval extends Component{
               <label>Start Date: </label>
                     <input
                         id='start' type="date"
-                        value={this.state.minDate}
-                        min={this.state.minDate}
-                        max={this.state.maxDate}
+                        defaultValue={minDate}
+                        onChange={this.updateMin}
+                        min={minDate}
+                        max={maxDate}
                     ></input>
               <label>End Date: </label>
                     <input
                         id='end'
                         type="date"
-                        value={this.state.maxDate}
-                        min={this.state.minDate}
-                        max={this.state.maxDate}
+                        defaultValue={maxDate}
+                        onChange={this.updateMax}
+                        min={minDate}
+                        max={maxDate}
                     ></input>
-            </form>
+                </form>
+                <button id="trumpApprovalSubmit" onClick={this.dateChange}>
+                    submit
+                </button>
                 <div id='trumpApproval' style={styles.trumpApproval}></div>
             </div>
         )

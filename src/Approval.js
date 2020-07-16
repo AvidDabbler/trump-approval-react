@@ -141,7 +141,6 @@ export default class Approval extends Component{
             .style("position", "absolute")
             .style("z-index", "10")
             .style("visibility", "hidden")
-            .text(d => d.approve_estimate)
       
         
         // approval render
@@ -160,9 +159,11 @@ export default class Approval extends Component{
             })
             .attr("r", d => 2 )
             .style("fill", d => 'red')
-            .on("mouseover", function(){return tooltip.style("visibility", "visible");})
-            .on("mousemove", function(){return tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");})
-            .on("mouseout", function(){return tooltip.style("visibility", "hidden");});
+            .on("mouseover", function(d){return tooltip.style("visibility", "visible").text(d.approve_estimate)})
+            .on("mousemove", function () {
+                return tooltip.style("top", (d3.event.pageY - 10) + "px").style("left", (d3.event.pageX + 10) + "px");
+            })
+            .on("mouseout", function(){return tooltip.style("visibility", "hidden");})
             // .on("mouseover", this.handleMouseOver)
             // .on("mousemove", function(){return tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");})
             // .on("mouseout", this.handleMouseOut)
@@ -224,7 +225,7 @@ export default class Approval extends Component{
     };
 
 
-    handleMouseOverCircle(d, i) {  
+    handleMouseOver(d, i) {  
         d3.select(this)
             .attr("r", d => 10)
      };

@@ -1,19 +1,28 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import * as d3 from 'd3';
-import { forceCenter } from 'd3';
+import { forceCenter, svg } from 'd3';
 
+const s = d3.select("body")
+    
 export default class Approval extends Component{
     constructor(props) {
 		super(props);
         this.state = {
             width: window.innerWidth - 60,
             height: props.height,
+            w: window.innerWidth,
+            h: window.innerHeight,
+            s: d3.select("body").append("svg").attr({
+                width: this.w,
+                height: this.h
+            })
         };
         // this.chartRef = React.createRef();
         this.dateChange= this.dateChange.bind(this)
         this.updateMax= this.updateMax.bind(this)
         this.updateMin= this.updateMin.bind(this)
+        // this.handleMouseOver= this.handleMouseOver.bind(this)
     }
     getHeight(element) {
         if (element && !this.state.elementHeight) { // need to check that we haven't already set the height or we'll create an infinite render loop
@@ -105,59 +114,43 @@ export default class Approval extends Component{
         });
         let csvSort = await csvParse.sort((a, b) => a.modeldate - b.modeldate);
         this.setData(await csvSort)
-        // this.setDates(this.state.trumpApproval)
-        // let csvDates = (min, max) => { 
-        //     await csvSort.filter(el => el.old_date)
-        // }
+        
         return await csvSort;
     };
 
     //only works with top level element
     //need to find equivelent to document.querySelectorAll('.trump-ratings').target.closest('.approval')
-    handleMouseOver(d, i) {  // Add interactivity
-        // Use D3 to select element, change color and size          
-        
-        d3.select(this)
-            .attr("r", d => 10)
 
-    };
-
-    handleMouseOut(d, i) {
-        // Use D3 to select element, change color back to normal
-        d3.select(this)
-            .attr("r", d => 2);
-    };
 
     chartRender = async (data, id, div) => {
         const filtered = await data.filter(data => data.subgroup == "All polls");
         const flength = await filtered.length;
-        let w = window.innerWidth;
-        let h = window.innerHeight;
-        var svg = d3.select("body").append("svg").attr({
-            width: w,
-            height: h
-        });
+        this.setState({ flength: flength });
+
+        
 
         let svgChart = d3.select(div)
             .append('svg')
             .attr("width", window.innerWidth - 60)
             .attr("height", 450)
-            .selectAll('circle')
-            .data(filtered)
-            .attr("class", d => id + '_' + d.subgroup)
-            .attr("id", d => id + '_' + d.modeldate)
-            .enter();
+            
         
-        let svgLabel = d3.select(div)
-            .append('div')
+        var tooltip = d3.select("#trumpApproval")
+            .data(filtered)
+            .append("div")
             .style("position", "absolute")
             .style("z-index", "10")
             .style("visibility", "hidden")
-            .selectAll('p')
-            .text("a simple tooltip")
+            .text(d => d.approve_estimate)
+      
         
         // approval render
-        svgChart.append('circle')
+        svgChart.selectAll('circle')
+            .data(filtered)
+            .attr("class", d => id + '_' + d.subgroup)
+            .attr("id", d => id + '_' + d.modeldate)
+            .enter()
+            .append('circle')
             .attr("cx", (d, i) => {
                 return (i)*(this.state.width/flength);
             })
@@ -167,34 +160,84 @@ export default class Approval extends Component{
             })
             .attr("r", d => 2 )
             .style("fill", d => 'red')
-            .on("mouseover", this.handleMouseOver)
-            .on("mouseout", this.handleMouseOut)
+            .on("mouseover", function(){return tooltip.style("visibility", "visible");})
+            .on("mousemove", function(){return tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");})
+            .on("mouseout", function(){return tooltip.style("visibility", "hidden");});
+            // .on("mouseover", this.handleMouseOver)
+            // .on("mousemove", function(){return tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");})
+            // .on("mouseout", this.handleMouseOut)
 
 
-        // disapproval render
-        svgChart.append("circle")
-            .attr("cx", (d, i) => {
-                return (i)*(this.state.width/flength);
-            })
-            .attr("cy", (d) => {
-                const meas = eval( 'd.' + 'disapprove_estimate');
-                return ((100-meas) * (this.state.height/100));
-            })
-            .attr("r", d => 2 )
-            .style("fill", d => 'blue')
-            .on("mouseover", this.handleMouseOver)
-            .on("mouseout", this.handleMouseOut)
         
-        svgLabel.append('p')
-            .attr("cx", (d, i) => {
-                return (i)*(this.state.width/flength);
-            })
-            .attr("cy", (d) => {
-                const meas = eval( 'd.' + 'disapprove_estimate');
-                return ((100-meas) * (this.state.height/100));
-            })
-            .on('mouseover', () => svg.style('visibility', 'visible'))
         
+        // svgChart.selectAll("circle")
+        //     .data(data)
+        //     .enter()
+        //     .append("svg:title")
+        //     .attr("stroke", "black")
+        //     .attr("x", (d, i) => {
+        //         console.log((i) * (this.state.width / flength))
+        //         return ((i) * (this.state.width / flength))
+        //     })
+        //     .attr("y", (d) => {
+        //         const meas = eval( 'd.' + 'approve_estimate');
+        //         return ((100- meas) * (this.state.height/100));
+        //     })
+        //     .attr('fontSize', 10)
+        //     .text(d => d.approve_estimate)
+        //     // .attr('class', 'hidden')
+        //     // .on("mouseover", this.handleMouseOverText)
+        //     // .on("mouseout", this.handleMouseOut)
+            
+        
+
+
+        // // disapproval render
+        // svgChart.selectAll('circle')
+        //     .data(filtered)
+        //     .attr("class", d => id + '_' + d.subgroup)
+        //     .attr("id", d => id + '_' + d.modeldate)
+        //     .enter()
+        //     .append("circle")
+        //     .attr("cx", (d, i) => {
+        //         return (i)*(this.state.width/flength);
+        //     })
+        //     .attr("cy", (d) => {
+        //         const meas = eval( 'd.' + 'disapprove_estimate');
+        //         return ((100-meas) * (this.state.height/100));
+        //     })
+        //     .attr("r", d => 2 )
+        //     .style("fill", d => 'blue')
+        //     .on("mouseover", this.handleMouseOver)
+        //     .on("mouseout", this.handleMouseOut)
+        
+        // svgLabel.append('p')
+        //     .attr("cx", (d, i) => {
+        //         return (i)*(this.state.width/flength);
+        //     })
+        //     .attr("cy", (d) => {
+        //         const meas = eval( 'd.' + 'disapprove_estimate');
+        //         return ((100-meas) * (this.state.height/100));
+        //     })
+        //     .on('mouseover', () => svg.style('visibility', 'visible'))
+        
+    };
+
+
+    handleMouseOverCircle(d, i) {  
+        d3.select(this)
+            .attr("r", d => 10)
+     };
+    
+    // handleMouseOverText(d, i) {  
+    //     d3.select(this)
+    //         .attr('class', 'visible')
+    //  };
+
+    handleMouseOut(d, i) {
+        // Use D3 to select element, change color back to normal
+        d3.select(this)
+            .attr("r", d => 2);
     };
 
     dateFilter() {

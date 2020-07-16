@@ -5,8 +5,8 @@ import Approval from './Approval';
 
 function App() {
   return (
-    <div id='main' className="App">
-      <Approval />
+    <div id='main' className="App" style={{flex: 1}}>
+      <Approval width='50%' height='450'/>
     </div>
   );
 }

@@ -1,21 +1,37 @@
 import React, { Component } from 'react';
+import ReactDOM from 'react-dom';
 import * as d3 from 'd3';
+import { forceCenter } from 'd3';
 
 export default class Approval extends Component{
     constructor(props) {
 		super(props);
         this.state = {
-            width: 900,
-            height: 450,
+            width: window.innerWidth - 60,
+            height: props.height,
         };
         // this.chartRef = React.createRef();
         this.dateChange= this.dateChange.bind(this)
         this.updateMax= this.updateMax.bind(this)
         this.updateMin= this.updateMin.bind(this)
     }
+    getHeight(element) {
+        if (element && !this.state.elementHeight) { // need to check that we haven't already set the height or we'll create an infinite render loop
+          this.setState({ elementHeight: element.clientHeight });
+        }
+    }
+    getWidth(element) {
+        if (element && !this.state.elementWidth) { // need to check that we haven't already set the height or we'll create an infinite render loop
+        //   this.setState({ elementWidth: element.clientWidth });
+        }
+      }
     
     async componentDidMount() {
         let data = await this.processData();
+        // this.setState({
+        //     elementHeight: this.divRef.clientHeight,
+        //     elementWidth: this.divRef.clientWidth
+        // });
         this.chartRender(await data, 'approve', "#trumpApproval");
         console.log(this.state)
     };
@@ -124,7 +140,7 @@ export default class Approval extends Component{
 
         let svgChart = d3.select(div)
             .append('svg')
-            .attr("width", '100%')
+            .attr("width", window.innerWidth - 60)
             .attr("height", 450)
             .selectAll('circle')
             .data(filtered)
@@ -211,7 +227,10 @@ export default class Approval extends Component{
         const { minDate, maxDate } = this.state; 
         console.log(this.state)
         return (
-            <div id='approvalContainer'>
+            <div
+                id='approvalContainer'
+                style={this.approvalContainer}
+            >
             {/* <DateSlider /> */}
             <form>
               <label>Start Date: </label>
@@ -244,12 +263,16 @@ export default class Approval extends Component{
 };
 
 const styles = {
+    approvalContainer: {
+        marginLeft: 'auto',
+        marginRight: 'auto'
+    },
     trumpApproval: {
         display: 'block',
         marginLeft: 'auto',
         marginRight: 'auto',
         justifyContent: 'center',
-        width: '90%',
+        // width: '90%',
         height:450
     },
     approval: {

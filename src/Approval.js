@@ -24,16 +24,6 @@ export default class Approval extends Component{
         this.updateMin= this.updateMin.bind(this)
         // this.handleMouseOver= this.handleMouseOver.bind(this)
     }
-    getHeight(element) {
-        if (element && !this.state.elementHeight) { // need to check that we haven't already set the height or we'll create an infinite render loop
-          this.setState({ elementHeight: element.clientHeight });
-        }
-    }
-    getWidth(element) {
-        if (element && !this.state.elementWidth) { // need to check that we haven't already set the height or we'll create an infinite render loop
-        //   this.setState({ elementWidth: element.clientWidth });
-        }
-      }
     
     async componentDidMount() {
         let data = await this.processData();
@@ -59,14 +49,6 @@ export default class Approval extends Component{
     setDates() {
 
     }
-
-    getWidth(){
-        return this.chartRef.current.parentElement.offsetWidth;
-    };
-
-    getHeight(){
-        return this.chartRef.current.parentElement.offsetHeight;
-    };
 
     setData(data) {
         this.setDates(data)
@@ -118,16 +100,11 @@ export default class Approval extends Component{
         return await csvSort;
     };
 
-    //only works with top level element
-    //need to find equivelent to document.querySelectorAll('.trump-ratings').target.closest('.approval')
-
-
     chartRender = async (data, id, div) => {
         const filtered = await data.filter(data => data.subgroup == "All polls");
         const flength = await filtered.length;
         this.setState({ flength: flength });
 
-        
 
         let svgChart = d3.select(div)
             .append('svg')
@@ -138,9 +115,11 @@ export default class Approval extends Component{
         var tooltip = d3.select("#trumpApproval")
             .data(filtered)
             .append("div")
+            .attr('backgroundColor', 'red')
             .style("position", "absolute")
             .style("z-index", "10")
             .style("visibility", "hidden")
+            .append('p')
       
         
         // approval render
@@ -154,12 +133,16 @@ export default class Approval extends Component{
                 return (i)*(this.state.width/flength);
             })
             .attr("cy", (d) => {
+                d3.select('circle')
+                    .attr("r", d => 10)
                 const meas = eval( 'd.' + 'approve_estimate');
                 return ((100-meas) * (this.state.height/100));
             })
             .attr("r", d => 3 )
             .style("fill", d => 'red')
-            .on("mouseover", function(d){return tooltip.style("visibility", "visible").text(d.approve_estimate)})
+            .on("mouseover", function (d) {
+                return tooltip.style("visibility", "visible").text(d.approve_estimate)
+            })
             .on("mousemove", function () {
                 return tooltip.style("top", (d3.event.pageY - 10) + "px").style("left", (d3.event.pageX + 10) + "px");
             })
@@ -184,50 +167,13 @@ export default class Approval extends Component{
             })
             .on("mouseout", function(){return tooltip.style("visibility", "hidden");})
         
-            
-        
-
-        // // disapproval render
-        // svgChart.selectAll('circle')
-        //     .data(filtered)
-        //     .attr("class", d => id + '_' + d.subgroup)
-        //     .attr("id", d => id + '_' + d.modeldate)
-        //     .enter()
-        //     .append("circle")
-        //     .attr("cx", (d, i) => {
-        //         return (i)*(this.state.width/flength);
-        //     })
-        //     .attr("cy", (d) => {
-        //         const meas = eval( 'd.' + 'disapprove_estimate');
-        //         return ((100-meas) * (this.state.height/100));
-        //     })
-        //     .attr("r", d => 2 )
-        //     .style("fill", d => 'blue')
-        //     .on("mouseover", this.handleMouseOver)
-        //     .on("mouseout", this.handleMouseOut)
-        
-        // svgLabel.append('p')
-        //     .attr("cx", (d, i) => {
-        //         return (i)*(this.state.width/flength);
-        //     })
-        //     .attr("cy", (d) => {
-        //         const meas = eval( 'd.' + 'disapprove_estimate');
-        //         return ((100-meas) * (this.state.height/100));
-        //     })
-        //     .on('mouseover', () => svg.style('visibility', 'visible'))
-        
     };
 
 
-    handleMouseOver(d, i) {  
+    handleMouseOver() {  
         d3.select(this)
             .attr("r", d => 10)
      };
-    
-    // handleMouseOverText(d, i) {  
-    //     d3.select(this)
-    //         .attr('class', 'visible')
-    //  };
 
     handleMouseOut(d, i) {
         // Use D3 to select element, change color back to normal
@@ -269,7 +215,6 @@ export default class Approval extends Component{
                 id='approvalContainer'
                 style={this.approvalContainer}
             >
-            {/* <DateSlider /> */}
             <form>
               <label>Start Date: </label>
                     <input
@@ -289,10 +234,16 @@ export default class Approval extends Component{
                         max={maxDate}
                     ></input>
                 </form>
-                <button id="trumpApprovalSubmit" onClick={this.dateChange}>
+                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" id="trumpApprovalSubmit" onClick={this.dateChange}>
                     submit
                 </button>
                 <div id='trumpApproval' style={styles.trumpApproval}></div>
+                <div id='statsContainer'>
+                    <div class=''>
+                        <h3>Approval</h3><h3 id='approve'>--%</h3>
+                        <h3>Disapproval</h3><h3 id='disapprove'>--%</h3>
+                    </div>
+                </div>
             </div>
         )
     };

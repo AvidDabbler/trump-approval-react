@@ -157,41 +157,35 @@ export default class Approval extends Component{
                 const meas = eval( 'd.' + 'approve_estimate');
                 return ((100-meas) * (this.state.height/100));
             })
-            .attr("r", d => 2 )
+            .attr("r", d => 3 )
             .style("fill", d => 'red')
             .on("mouseover", function(d){return tooltip.style("visibility", "visible").text(d.approve_estimate)})
             .on("mousemove", function () {
                 return tooltip.style("top", (d3.event.pageY - 10) + "px").style("left", (d3.event.pageX + 10) + "px");
             })
+            .on("mouseout", function () { return tooltip.style("visibility", "hidden"); })
+            .enter()
+            .data(filtered)
+            .attr("class", d => id + '_' + d.subgroup)
+            .attr("id", d => id + '_' + d.modeldate)
+            .enter()
+            .append('circle')
+            .attr("cx", (d, i) => {
+                return (i)*(this.state.width/flength);
+            })
+            .attr("cy", (d) => {
+                return ((100-d.disapprove_estimate) * (this.state.height/100));
+            })
+            .attr("r", d => 3 )
+            .style("fill", d => 'blue')
+            .on("mouseover", function(d){return tooltip.style("visibility", "visible").text(d.disapprove_estimate)})
+            .on("mousemove", function () {
+                return tooltip.style("top", (d3.event.pageY - 10) + "px").style("left", (d3.event.pageX + 10) + "px");
+            })
             .on("mouseout", function(){return tooltip.style("visibility", "hidden");})
-            // .on("mouseover", this.handleMouseOver)
-            // .on("mousemove", function(){return tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");})
-            // .on("mouseout", this.handleMouseOut)
-
-
         
-        
-        // svgChart.selectAll("circle")
-        //     .data(data)
-        //     .enter()
-        //     .append("svg:title")
-        //     .attr("stroke", "black")
-        //     .attr("x", (d, i) => {
-        //         console.log((i) * (this.state.width / flength))
-        //         return ((i) * (this.state.width / flength))
-        //     })
-        //     .attr("y", (d) => {
-        //         const meas = eval( 'd.' + 'approve_estimate');
-        //         return ((100- meas) * (this.state.height/100));
-        //     })
-        //     .attr('fontSize', 10)
-        //     .text(d => d.approve_estimate)
-        //     // .attr('class', 'hidden')
-        //     // .on("mouseover", this.handleMouseOverText)
-        //     // .on("mouseout", this.handleMouseOut)
             
         
-
 
         // // disapproval render
         // svgChart.selectAll('circle')

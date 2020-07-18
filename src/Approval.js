@@ -130,7 +130,7 @@ export default class Approval extends Component{
             .enter()
             .append('circle')
             .attr("cx", (d, i) => {
-                return (i)*(this.state.width/flength);
+                return ((((i)*(this.state.width/flength))*0.95)+10);
             })
             .attr("cy", (d) => {
                 d3.select('circle')
@@ -141,12 +141,14 @@ export default class Approval extends Component{
             .attr("r", d => 3 )
             .style("fill", d => 'red')
             .on("mouseover", function (d) {
-                return tooltip.style("visibility", "visible").text(d.approve_estimate)
+                d3.select(this).attr("r", d => 10);
+                document.getElementById('approve').innerHTML = `${d.approve_estimate.slice(0,4)}%`;
+                document.getElementById('disapprove').innerHTML = `${d.disapprove_estimate.slice(0, 4)}%`;
             })
-            .on("mousemove", function () {
-                return tooltip.style("top", (d3.event.pageY - 10) + "px").style("left", (d3.event.pageX + 10) + "px");
+            .on("mouseout", function () {
+                d3.select(this).attr("r", d => 2)
+                return tooltip.style("visibility", "hidden");
             })
-            .on("mouseout", function () { return tooltip.style("visibility", "hidden"); })
             .enter()
             .data(filtered)
             .attr("class", d => id + '_' + d.subgroup)
@@ -154,18 +156,22 @@ export default class Approval extends Component{
             .enter()
             .append('circle')
             .attr("cx", (d, i) => {
-                return (i)*(this.state.width/flength);
+                return ((((i)*(this.state.width/flength))*0.95)+10);
             })
             .attr("cy", (d) => {
                 return ((100-d.disapprove_estimate) * (this.state.height/100));
             })
             .attr("r", d => 3 )
             .style("fill", d => 'blue')
-            .on("mouseover", function(d){return tooltip.style("visibility", "visible").text(d.disapprove_estimate)})
-            .on("mousemove", function () {
-                return tooltip.style("top", (d3.event.pageY - 10) + "px").style("left", (d3.event.pageX + 10) + "px");
+            .on("mouseover", function (d) {
+                d3.select(this).attr("r", d => 10);
+                document.getElementById('approve').innerHTML = `${d.approve_estimate.slice(0, 4)}%`;
+                document.getElementById('disapprove').innerHTML = `${d.disapprove_estimate.slice(0, 4)}%`;
             })
-            .on("mouseout", function(){return tooltip.style("visibility", "hidden");})
+            .on("mouseout", function () {
+                d3.select(this).attr("r", d => 2)
+                return tooltip.style("visibility", "hidden");
+            })
         
     };
 
@@ -214,34 +220,47 @@ export default class Approval extends Component{
             <div
                 id='approvalContainer'
                 style={this.approvalContainer}
+                className="p-6"
             >
             <form>
-              <label>Start Date: </label>
+                <label>Start Date: </label>
                     <input
-                        id='start' type="date"
+                        id='start'
+                        type="date"
+                        className="bg-white focus:outline-none focus:shadow-outline border border-gray-300 rounded-lg py-2 px-4"
                         defaultValue={minDate}
                         onChange={this.updateMin}
                         min={minDate}
                         max={maxDate}
-                    ></input>
-              <label>End Date: </label>
+                    />
+                <label>End Date: </label>
                     <input
                         id='end'
                         type="date"
+                        className="bg-white focus:outline-none focus:shadow-outline border border-gray-300 rounded-lg py-2 px-4"
                         defaultValue={maxDate}
                         onChange={this.updateMax}
                         min={minDate}
                         max={maxDate}
-                    ></input>
+                    />
                 </form>
-                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" id="trumpApprovalSubmit" onClick={this.dateChange}>
+                <button
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    id="trumpApprovalSubmit"
+                    onClick={this.dateChange}
+                >
                     submit
                 </button>
-                <div id='trumpApproval' style={styles.trumpApproval}></div>
-                <div id='statsContainer'>
-                    <div class=''>
-                        <h3>Approval</h3><h3 id='approve'>--%</h3>
-                        <h3>Disapproval</h3><h3 id='disapprove'>--%</h3>
+
+                <div id='trumpApproval'
+                    style={styles.trumpApproval}
+                    className="ml-10 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden p-5"
+                >
+                    <div id='statsContainer'>
+                        <div class='absolute top-30 ml-10 w-1/4 bg-white shadow-lg rounded-lg overflow-hidden bg-blue-100 p-5'>
+                            <h3 class="font-bold">Approval</h3><h3 id='approve'>--%</h3>
+                            <h3 class="font-bold">Disapproval</h3><h3 id='disapprove'>--%</h3>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -262,7 +281,7 @@ const styles = {
         marginRight: 'auto',
         justifyContent: 'center',
         // width: '90%',
-        height:450
+        // height:'60vh'
     },
     approval: {
         display: 'absolute',

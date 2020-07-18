@@ -176,22 +176,17 @@ export default class Approval extends Component{
                 return tooltip.style("visibility", "hidden");
             });
         
-            // create svg elemen    
-            var svg = d3.select("#trumpApproval")
+        // create svg elemen    
+        var svg = d3.select("#trumpApproval")
             .append("svg")
             .attr("width", 1000)
 
-            // Create the scale
-        var x = d3.scalePow()
-            .exponent(1)
-            // .classed('absolute top-0', true)
-            .domain([2017, 2020])
-            .range([20, 800]);
+        var x = d3.scaleTime()
+            .domain([this.state.minDate, this.state.maxDate])
+            .range(200, 100)
+            .nice()
 
-            // Draw the axis
-            svg
-            .append("g")
-            .attr("transform", "translate('50vh')")      // This controls the vertical position of the Axis
+            svg.append("g")
             .call(d3.axisBottom(x));
         
     };
@@ -232,48 +227,51 @@ export default class Approval extends Component{
                 style={this.approvalContainer}
                 className="p-6"
             >
-            <form>
-                <label>Start Date: </label>
-                    <input
-                        id='start'
-                        type="date"
-                        className="bg-white focus:outline-none focus:shadow-outline border border-gray-300 rounded-lg py-2 px-4"
-                        defaultValue={minDate}
-                        onChange={this.updateMin}
-                        min={minDate}
-                        max={maxDate}
-                    />
-                <label>End Date: </label>
-                    <input
-                        id='end'
-                        type="date"
-                        className="bg-white focus:outline-none focus:shadow-outline border border-gray-300 rounded-lg py-2 px-4"
-                        defaultValue={maxDate}
-                        onChange={this.updateMax}
-                        min={minDate}
-                        max={maxDate}
-                    />
+            <div id='trumpApproval'
+                style={styles.trumpApproval}
+                className="ml-10 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden p-5"
+                >
+                <h1 className="font-bold text-2xl pt-1 pb-8">
+                    Trump Approval Ratings</h1>
+                <form class='float-right'>
+                    <label className='m-2 font-semibold'>Start Date: </label>
+                        <input
+                            id='start'
+                            type="date"
+                            className="m-2 bg-white focus:outline-none focus:shadow-outline border border-gray-500 rounded-lg py-2 px-4"
+                            defaultValue={minDate}
+                            onChange={this.updateMin}
+                            min={minDate}
+                            max={maxDate}
+                        />
+                    <label className='m-2 font-semibold'>End Date: </label>
+                        <input
+                            id='end'
+                            type="date"
+                            className="m-2 bg-white focus:outline-none focus:shadow-outline border border-gray-500 rounded-lg py-2 px-4"
+                            defaultValue={maxDate}
+                            onChange={this.updateMax}
+                            min={minDate}
+                            max={maxDate}
+                        />
+                    <button
+                        class="m-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        id="trumpApprovalSubmit"
+                        onClick={this.filterData}
+                    >
+                        Submit
+                    </button>
                 </form>
-                <button
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                    id="trumpApprovalSubmit"
-                    onClick={this.filterData}
-                >
-                    submit
-                </button>
 
-                <div id='trumpApproval'
-                    style={styles.trumpApproval}
-                    className="ml-10 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden p-5"
-                >
-                    <div id='statsContainer'>
-                        <div class='absolute top-30 ml-10 w-1/4 bg-white shadow-lg rounded-lg overflow-hidden bg-blue-100 p-5'>
-                            <h2 class="font-bold" id="approve-date"> -- </h2>
-                            <h3 class="font-bold">Approval</h3><h3 id='approve'>--%</h3>
-                            <h3 class="font-bold">Disapproval</h3><h3 id='disapprove'>--%</h3>
-                        </div>
+                    
+                <div id='statsContainer'>
+                    <div class='absolute top-30 ml-10 w-1/4 bg-white shadow-lg rounded-lg overflow-hidden bg-blue-100 p-5'>
+                        <h1 class="font-extrabold text-lg" id="approve-date"> -- </h1>
+                        <h3 class="font-bold">Approval</h3><h3 id='approve'>--%</h3>
+                        <h3 class="font-bold">Disapproval</h3><h3 id='disapprove'>--%</h3>
                     </div>
                 </div>
+            </div>
             </div>
         )
     };
@@ -293,14 +291,6 @@ const styles = {
         justifyContent: 'center',
         // width: '90%',
         height:'85vh'
-    },
-    approval: {
-        display: 'absolute',
-    },
-    disapproval: {
-        display: 'absolute',
-        marginTop: '-450px',
-        
     }
 }
             

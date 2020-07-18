@@ -19,18 +19,15 @@ export default class Approval extends Component{
             })
         };
         // this.chartRef = React.createRef();
-        this.dateChange= this.dateChange.bind(this)
+        // this.dateChange= this.dateChange.bind(this)
         this.updateMax= this.updateMax.bind(this)
         this.updateMin= this.updateMin.bind(this)
+        this.filterData= this.filterData.bind(this)
         // this.handleMouseOver= this.handleMouseOver.bind(this)
     }
     
     async componentDidMount() {
         let data = await this.processData();
-        // this.setState({
-        //     elementHeight: this.divRef.clientHeight,
-        //     elementWidth: this.divRef.clientWidth
-        // });
         this.chartRender(await data, 'approve', "#trumpApproval");
         console.log(this.state)
     };
@@ -46,7 +43,10 @@ export default class Approval extends Component{
         }
     };
 
-    setDates() {
+    async filterData() {
+        let { trumpApproval, minDate, maxDate } = this.state;
+        let data = () => { trumpApproval.filter(el => el.modeldate > minDate && el.modeldate < maxDate )}
+        this.chartRender(await data(), 'approve', "#trumpApproval");
 
     }
 
@@ -130,20 +130,21 @@ export default class Approval extends Component{
             .enter()
             .append('circle')
             .attr("cx", (d, i) => {
-                return ((((i)*(this.state.width/flength))*0.95)+10);
+                return ((((i) * (this.state.width / flength)) * 0.95) + 10);
             })
             .attr("cy", (d) => {
                 d3.select('circle')
                     .attr("r", d => 10)
-                const meas = eval( 'd.' + 'approve_estimate');
-                return ((100-meas) * (this.state.height/100));
+                const meas = eval('d.' + 'approve_estimate');
+                return ((100 - meas) * (this.state.height / 100));
             })
-            .attr("r", d => 3 )
+            .attr("r", d => 3)
             .style("fill", d => 'red')
             .on("mouseover", function (d) {
                 d3.select(this).attr("r", d => 10);
-                document.getElementById('approve').innerHTML = `${d.approve_estimate.slice(0,4)}%`;
+                document.getElementById('approve').innerHTML = `${d.approve_estimate.slice(0, 4)}%`;
                 document.getElementById('disapprove').innerHTML = `${d.disapprove_estimate.slice(0, 4)}%`;
+                document.getElementById('approve-date').innerHTML = `${d.old_date}`;
             })
             .on("mouseout", function () {
                 d3.select(this).attr("r", d => 2)
@@ -156,22 +157,42 @@ export default class Approval extends Component{
             .enter()
             .append('circle')
             .attr("cx", (d, i) => {
-                return ((((i)*(this.state.width/flength))*0.95)+10);
+                return ((((i) * (this.state.width / flength)) * 0.95) + 10);
             })
             .attr("cy", (d) => {
-                return ((100-d.disapprove_estimate) * (this.state.height/100));
+                return ((100 - d.disapprove_estimate) * (this.state.height / 100));
             })
-            .attr("r", d => 3 )
+            .attr("r", d => 3)
             .style("fill", d => 'blue')
             .on("mouseover", function (d) {
                 d3.select(this).attr("r", d => 10);
                 document.getElementById('approve').innerHTML = `${d.approve_estimate.slice(0, 4)}%`;
                 document.getElementById('disapprove').innerHTML = `${d.disapprove_estimate.slice(0, 4)}%`;
+                document.getElementById('approve-date').innerHTML = `${d.old_date}`;
+
             })
             .on("mouseout", function () {
                 d3.select(this).attr("r", d => 2)
                 return tooltip.style("visibility", "hidden");
-            })
+            });
+        
+            // create svg elemen    
+            var svg = d3.select("#trumpApproval")
+            .append("svg")
+            .attr("width", 1000)
+
+            // Create the scale
+        var x = d3.scalePow()
+            .exponent(1)
+            // .classed('absolute top-0', true)
+            .domain([2017, 2020])
+            .range([20, 800]);
+
+            // Draw the axis
+            svg
+            .append("g")
+            .attr("transform", "translate('50vh')")      // This controls the vertical position of the Axis
+            .call(d3.axisBottom(x));
         
     };
 
@@ -187,12 +208,6 @@ export default class Approval extends Component{
             .attr("r", d => 2);
     };
 
-    dateFilter() {
-        // return this.state.trumpApproval.filter(item => {
-        //     item.
-        // })
-    }
-
     updateMin(ev) {
         this.setState({
             minDate: ev.target.value,
@@ -205,11 +220,6 @@ export default class Approval extends Component{
             maxDate: ev.target.value,
             maxTime: new Date(ev.target.value)
         }, console.log(this.state))
-    }
-
-    dateChange() {
-        console.log(this.state);
-        
     }
     
 
@@ -247,7 +257,7 @@ export default class Approval extends Component{
                 <button
                     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                     id="trumpApprovalSubmit"
-                    onClick={this.dateChange}
+                    onClick={this.filterData}
                 >
                     submit
                 </button>
@@ -258,6 +268,7 @@ export default class Approval extends Component{
                 >
                     <div id='statsContainer'>
                         <div class='absolute top-30 ml-10 w-1/4 bg-white shadow-lg rounded-lg overflow-hidden bg-blue-100 p-5'>
+                            <h2 class="font-bold" id="approve-date"> -- </h2>
                             <h3 class="font-bold">Approval</h3><h3 id='approve'>--%</h3>
                             <h3 class="font-bold">Disapproval</h3><h3 id='disapprove'>--%</h3>
                         </div>
@@ -281,7 +292,7 @@ const styles = {
         marginRight: 'auto',
         justifyContent: 'center',
         // width: '90%',
-        // height:'60vh'
+        height:'85vh'
     },
     approval: {
         display: 'absolute',

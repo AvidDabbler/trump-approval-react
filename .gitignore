@@ -127,4 +127,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # custom
+
 src/private.js
+spec.yaml
+src/todo.js

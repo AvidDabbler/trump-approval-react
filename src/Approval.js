@@ -3,6 +3,17 @@ import ReactDOM from 'react-dom';
 import * as d3 from 'd3';
 import { forceCenter, svg } from 'd3';
 
+
+/*
+
+todo: add in weekly and monthly percent changes on mouseover
+todo: pass click props to News to filter articles 
+ 
+ 
+
+*/
+
+
 const s = d3.select("body")
     
 export default class Approval extends Component{
@@ -98,7 +109,7 @@ export default class Approval extends Component{
             };
         });
         let csvSort = await csvParse.sort((a, b) => a.modeldate - b.modeldate);
-        this.setData(await csvSort)
+        this.setData(await csvSort, ()=>console.log(this.state))
         
         return await csvSort;
     };
@@ -106,8 +117,8 @@ export default class Approval extends Component{
     chartRender = async (data, id, div) => {
         const filtered = await data.filter(data => data.subgroup == "All polls");
         const flength = await filtered.length;
-        const width = this.state.width * .65
-        const height = 300;
+        const width = this.state.width  
+        const height =250;
 
         this.setState({ flength: flength });
 
@@ -115,7 +126,7 @@ export default class Approval extends Component{
             .append('svg')
             .attr("width", width)
             .attr("height", height)
-            .attr('id', 'here')
+            .attr('id', 'svgChart')
             
         
         var tooltip = d3.select("#trumpApproval")
@@ -136,13 +147,14 @@ export default class Approval extends Component{
             .enter()
             .append('circle')
             .attr("cx", (d, i) => {
-                return ((((i) * (width / flength)) ) + 10) * .97;
+                return ((((i) * (width / flength)) ) + 10 ) * .71;
             })
             .attr("cy", (d) => {
-                return ((100 - d.approve_estimate) * (height / 100));
+                return ((100 - d.approve_estimate) * (height / 100)) - 40;
 
             })
-            .attr("r", d => 3)
+            .attr("r", d => 3) 
+
             .style("fill", d => 'red')
             .on("mouseover", function (d) {
                 d3.select(this).attr("r", d => 10);
@@ -161,10 +173,10 @@ export default class Approval extends Component{
             .enter()
             .append('circle')
             .attr("cx", (d, i) => {
-                return ((((i) * (width / flength)) ) + 10) * .97;
+                return ((((i) * (width / flength)) ) + 10) * .71;
             })
             .attr("cy", (d) => {
-                return ((100 - d.disapprove_estimate) * (height / 100));
+                return ((100 - d.disapprove_estimate) * (height / 100)) - 40;
             })
             .attr("r", d => 3)
             .style("fill", d => 'blue')
@@ -229,55 +241,23 @@ export default class Approval extends Component{
             <div
                 id='approvalContainer'
                 style={this.approvalContainer}
-                className="w-0_72"
+                className="w-100"
             >
-            <div id='trumpApproval'
-                style={styles.trumpApproval}
-                className="grid content-center ml-10 border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden p-5"
-            >
-                <h1 className="font-bold text-2xl pt-1 pb-8">
-                    Trump Approval Ratings</h1>
-                <form class='float-right'>
-                    <div className="flex flex-column">
-                        <label className='m-2 font-semibold'>Start Date: </label>
-                        <input
-                            id='start'
-                            type="date"
-                            className="m-2 bg-white focus:outline-none focus:shadow-outline border border-gray-500 rounded-lg py-2 px-4"
-                            defaultValue={min}
-                            onChange={this.updateMin}
-                            min={min}
-                            max={max}
-                            />
-                    </div>
-                    <div className="flex flex-column">
-                        <label className='m-2 font-semibold'>End Date: </label>
-                            <input
-                                id='end'
-                                type="date"
-                                className="m-2 bg-white focus:outline-none focus:shadow-outline border border-gray-500 rounded-lg py-2 px-4"
-                                defaultValue={max}
-                                onChange={this.updateMax}
-                                min={min}
-                                max={max}
-                                />
-                    </div>
-                    <button
-                        class="m-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                        id="trumpApprovalSubmit"
-                        onClick={this.filterData}
-                    >
-                        Submit
-                    </button>
-                </form>
                 <div id='statsContainer'>
-                    <div class='absolute m-6 text-center w-40  bg-white shadow-lg rounded-lg overflow-hidden bg-blue-100'>
-                        <h1 class="font-extrabold text-lg" id="approve-date"> -- </h1>
-                        <h3 class="font-bold">Approval</h3><h3 id='approve'>--%</h3>
-                        <h3 class="font-bold">Disapproval</h3><h3 id='disapprove'>--%</h3>
+                    <div class='flex flex-column border-2 w-1/5 float-right text-center bg-white shadow-lg rounded-lg ml-5 p-4' style={styles.trumpApproval}>
+                        <h1 class="font-extrabold text-2xl" id="approve-date"> -- </h1>
+                        <h3 class="font-bold text-xl">Approval</h3><h3 id='approve'>--%</h3>
+                        <h3 class="font-bold text-xl">Disapproval</h3><h3 id='disapprove'>--%</h3>
+                        <h3 class="font-bold text-xl">Weekly Change</h3><h3 id='week-change'>--%</h3>
+                        <h3 class="font-bold text-xl">Monthly Change</h3><h3 id='month-change'>--%</h3>
                     </div>
                 </div>
-            </div>
+                    
+                <div id='trumpApproval'
+                        style={styles.trumpApproval}
+                        className="grid content-center border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden p-5">  
+                    <h1 className="font-bold text-2xl pt-1 pb-8">Trump Approval Ratings</h1> 
+                </div>
             </div>
         )
     };
@@ -288,15 +268,16 @@ export default class Approval extends Component{
 const styles = {
     approvalContainer: {
         marginLeft: 'auto',
-        marginRight: 'auto'
+        marginRight: 'auto',
+        // paddingLeft: 50
     },
     trumpApproval: {
         display: 'block',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        justifyContent: 'center',
-        // width: '90%',
-        height:'85vh'
-    }
+        // marginLeft: 'auto',
+        // marginRight: 'auto',
+        // justifyContent: 'center',
+        height:'50vh'
+    },
+
 }
             

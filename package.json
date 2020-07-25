@@ -7,18 +7,19 @@
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
     "autoprefixer": "^9.8.5",
+    "axios": "^0.19.2",
     "chart.js": "^2.9.3",
     "d3": "^5.16.0",
     "postcss-cli": "^7.1.1",
     "react": "^16.13.1",
     "react-compound-slider": "^2.5.0",
+    "react-d3-library": "^1.1.8",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.1",
     "tailwindcss": "^1.5.1"
   },
   "scripts": {
     "build:tailwind": "tailwindcss build src/tailwind.css -o src/tailwind.output.css",
-
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

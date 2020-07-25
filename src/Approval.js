@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import * as d3 from 'd3';
 import { forceCenter, svg } from 'd3';
+import Style from './Style.js';
 
 
 /*
@@ -9,8 +10,6 @@ import { forceCenter, svg } from 'd3';
 todo: add in weekly and monthly percent changes on mouseover
 todo: pass click props to News to filter articles 
  
- 
-
 */
 
 
@@ -21,20 +20,18 @@ export default class Approval extends Component{
 		super(props);
         this.state = {
             width: window.innerWidth - 60,
-            height: props.height,
+            height: 0,
             w: window.innerWidth,
-            h: window.innerHeight,
+            h: 0,
             s: d3.select("body").append("svg").attr({
                 width: this.w,
                 height: this.h
             })
         };
-        // this.chartRef = React.createRef();
-        // this.dateChange= this.dateChange.bind(this)
+
         this.updateMax= this.updateMax.bind(this)
         this.updateMin= this.updateMin.bind(this)
         this.filterData= this.filterData.bind(this)
-        // this.handleMouseOver= this.handleMouseOver.bind(this)
     }
     
     async componentDidMount() {
@@ -118,7 +115,7 @@ export default class Approval extends Component{
         const filtered = await data.filter(data => data.subgroup == "All polls");
         const flength = await filtered.length;
         const width = this.state.width  
-        const height =250;
+        const height = 250;
 
         this.setState({ flength: flength });
 
@@ -127,16 +124,6 @@ export default class Approval extends Component{
             .attr("width", width)
             .attr("height", height)
             .attr('id', 'svgChart')
-            
-        
-        var tooltip = d3.select("#trumpApproval")
-            .data(filtered)
-            .append("div")
-            .attr('backgroundColor', 'red')
-            .style("position", "absolute")
-            .style("z-index", "10")
-            .style("visibility", "hidden")
-            .append('p')
       
         
         // approval render
@@ -164,7 +151,7 @@ export default class Approval extends Component{
             })
             .on("mouseout", function () {
                 d3.select(this).attr("r", d => 2)
-                return tooltip.style("visibility", "hidden");
+                return 
             })
             .enter()
             .data(filtered)
@@ -189,22 +176,8 @@ export default class Approval extends Component{
             })
             .on("mouseout", function () {
                 d3.select(this).attr("r", d => 2)
-                return tooltip.style("visibility", "hidden");
+                return
             });
-        
-        // create svg elemen    
-        var svg = d3.select("#trumpApproval")
-            .append("svg")
-            .attr("width", 1000)
-
-        var x = d3.scaleTime()
-            .domain([this.state.minDate, this.state.maxDate])
-            .range(200, 100)
-            .nice()
-
-            svg.append("g")
-            .call(d3.axisBottom(x));
-        
     };
 
 
@@ -240,44 +213,30 @@ export default class Approval extends Component{
         return (
             <div
                 id='approvalContainer'
+                className="w-100 flex flex-row"
                 style={this.approvalContainer}
-                className="w-100"
-            >
-                <div id='statsContainer'>
-                    <div class='flex flex-column border-2 w-1/5 float-right text-center bg-white shadow-lg rounded-lg ml-5 p-4' style={styles.trumpApproval}>
-                        <h1 class="font-extrabold text-2xl" id="approve-date"> -- </h1>
-                        <h3 class="font-bold text-xl">Approval</h3><h3 id='approve'>--%</h3>
-                        <h3 class="font-bold text-xl">Disapproval</h3><h3 id='disapprove'>--%</h3>
-                        <h3 class="font-bold text-xl">Weekly Change</h3><h3 id='week-change'>--%</h3>
-                        <h3 class="font-bold text-xl">Monthly Change</h3><h3 id='month-change'>--%</h3>
-                    </div>
-                </div>
-                    
+            >  
+                
                 <div id='trumpApproval'
-                        style={styles.trumpApproval}
-                        className="grid content-center border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden p-5">  
+                    className="p-5 w-4/5 border-2 bg-white shadow-lg rounded-lg bg-white-100"
+                    style={Style.trumpApproval}>  
                     <h1 className="font-bold text-2xl pt-1 pb-8">Trump Approval Ratings</h1> 
                 </div>
+
+                <div
+                    className='ml-5 p-5 border-2 text-center bg-white shadow-lg rounded-lg'
+                >   
+                    <h1 class="font-extrabold text-2xl" id="approve-date">--</h1>
+                    <h3 class="font-bold text-xl">Approval</h3><h3 id='approve'>--%</h3>
+                    <h3 class="font-bold text-xl">Disapproval</h3><h3 id='disapprove'>--%</h3>
+                    <h3 class="font-bold text-xl">Weekly Change</h3><h3 id='week-change'>--%</h3>
+                    <h3 class="font-bold text-xl">Monthly Change</h3><h3 id='month-change'>--%</h3>
+                </div>
+
             </div>
         )
     };
 
     
 };
-
-const styles = {
-    approvalContainer: {
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        // paddingLeft: 50
-    },
-    trumpApproval: {
-        display: 'block',
-        // marginLeft: 'auto',
-        // marginRight: 'auto',
-        // justifyContent: 'center',
-        height:'50vh'
-    },
-
-}
             

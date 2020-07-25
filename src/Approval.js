@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import * as d3 from 'd3';
 import { forceCenter, svg } from 'd3';
 import Style from './Style.js';
+import { array } from 'prop-types';
 
 
 /*
@@ -95,6 +96,18 @@ export default class Approval extends Component{
         data.filter(el => el.statDate>=this.state.minDate && el.statDate <= this.state.maxDate )
     };
 
+    percentChange(ar) {
+        for (let i = 0; i < (ar.length - 7); i++){
+            let weekChange = i + 7
+            ar[weekChange].weeklyChange = `${(((ar[weekChange].approve_estimate - ar[i].approve_estimate) / ar[i].approve_estimate) * 100)}`;
+        }
+        for (let i = 0; i < (ar.length - 30); i++){
+            let monthChange = i + 30
+            ar[monthChange].monthlyChange = `${(((ar[monthChange].approve_estimate - ar[i].approve_estimate) / ar[i].approve_estimate) * 100)}`;
+        }
+        return ar
+    }
+
     processData = async () => {
         let csvParse = await d3.csv(await 'https://projects.fivethirtyeight.com/trump-approval-data/approval_topline.csv', data => {
             return {
@@ -106,9 +119,10 @@ export default class Approval extends Component{
             };
         });
         let csvSort = await csvParse.sort((a, b) => a.modeldate - b.modeldate);
-        this.setData(await csvSort, ()=>console.log(this.state))
-        
-        return await csvSort;
+        this.setData(await csvSort)
+        let final = await this.percentChange(await csvSort)
+        console.log(await final)
+        return await final;
     };
 
     chartRender = async (data, id, div) => {
@@ -147,6 +161,8 @@ export default class Approval extends Component{
                 d3.select(this).attr("r", d => 10);
                 document.getElementById('approve').innerHTML = `${d.approve_estimate.slice(0, 4)}%`;
                 document.getElementById('disapprove').innerHTML = `${d.disapprove_estimate.slice(0, 4)}%`;
+                document.getElementById('week-change').innerHTML = `${d.weeklyChange.slice(0, 4)}%`;
+                document.getElementById('month-change').innerHTML = `${d.monthlyChange.slice(0, 4)}%`;
                 document.getElementById('approve-date').innerHTML = `${d.old_date}`;
             })
             .on("mouseout", function () {
@@ -171,6 +187,8 @@ export default class Approval extends Component{
                 d3.select(this).attr("r", d => 10);
                 document.getElementById('approve').innerHTML = `${d.approve_estimate.slice(0, 4)}%`;
                 document.getElementById('disapprove').innerHTML = `${d.disapprove_estimate.slice(0, 4)}%`;
+                document.getElementById('week-change').innerHTML = `${d.weeklyChange.slice(0, 4)}%`;
+                document.getElementById('month-change').innerHTML = `${d.monthlyChange.slice(0, 4)}%`;
                 document.getElementById('approve-date').innerHTML = `${d.old_date}`;
 
             })

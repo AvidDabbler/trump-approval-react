@@ -12,8 +12,7 @@ const Style = {
         display: 'block',
     },
     news: {
-        height: 300,
-
+        height:500
     }
 }
 

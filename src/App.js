@@ -13,9 +13,6 @@ function App() {
                 className=''
                 width='90%'
                 height='100' />
-            <div id='news' style={Style.news} className='w-100 h-10 grid content-center border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden p-5 mt-5'>
-                <h1>Events</h1>
-            </div>
         </div>
     );
 }

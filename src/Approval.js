@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import * as d3 from 'd3';
-import { forceCenter, svg } from 'd3';
 import Style from './Style.js';
-import { array } from 'prop-types';
+import * as axios from 'axios';
+import { p, cors_noDate } from './private.js';
+import News from './News.js';
 
 
 /*
@@ -37,6 +37,7 @@ export default class Approval extends Component{
     
     async componentDidMount() {
         let data = await this.processData();
+        await this.nytData();
         this.chartRender(await data, 'approve', "#trumpApproval");
         this.setState({
             min: this.state.minDate,
@@ -53,6 +54,34 @@ export default class Approval extends Component{
             console.warn('issue with fetchdedData() ', data);
             return;
         }
+    };
+
+    async nytData() {
+        const startDate = this.props.startDate ? this.props.startDate : new Date();
+        let end = startDate.getFullYear() + (startDate.getMonth() + 1 < 10 ? `0${startDate.getMonth() + 1}` : startDate.getMonth() + 1) + startDate.getDate();
+        let start = end - 7
+
+        console.log('here')
+        
+        let url = `https://api.nytimes.com/svc/archive/v1/2019/1.json?q=trump&news_desk=Politics&source="The New York Times"&begin_date=${start}&end_date=${end}&api-key=${p().nyt}`;
+
+        let data = await axios.get(cors_noDate(url), {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            },
+        }).then(arr => {
+            return arr.data.response.docs
+        }).then(arr => {
+            arr.map(el => el.photo = el.multimedia.length > 3)    
+            return arr
+        })
+        
+        await this.setState({
+            isLoading: false,
+            nytObj: data.slice(0, 10),
+            startDate: startDate,
+            endDate: startDate.setDate(startDate.getDate() + 7)
+        });
     };
 
     async filterData(event) {
@@ -226,32 +255,36 @@ export default class Approval extends Component{
     
 
     render() {
-        const { min, max } = this.state; 
+        const { nytObj, startDate, endDate } = this.state; 
        
         return (
-            <div
-                id='approvalContainer'
-                className="w-100 flex flex-row"
-                style={this.approvalContainer}
-            >  
-                
-                <div id='trumpApproval'
-                    className="p-5 w-4/5 border-2 bg-white shadow-lg rounded-lg bg-white-100"
-                    style={Style.trumpApproval}>  
-                    <h1 className="font-bold text-2xl pt-1 pb-8">Trump Approval Ratings</h1> 
-                </div>
-
+            <>
                 <div
-                    className='ml-5 p-5 border-2 text-center bg-white shadow-lg rounded-lg'
-                >   
-                    <h1 class="font-extrabold text-2xl" id="approve-date">--</h1>
-                    <h3 class="font-bold text-xl">Approval</h3><h3 id='approve'>--%</h3>
-                    <h3 class="font-bold text-xl">Disapproval</h3><h3 id='disapprove'>--%</h3>
-                    <h3 class="font-bold text-xl">Weekly Change</h3><h3 id='week-change'>--%</h3>
-                    <h3 class="font-bold text-xl">Monthly Change</h3><h3 id='month-change'>--%</h3>
-                </div>
+                    id='approvalContainer'
+                    className="w-100 flex flex-row"
+                    style={this.approvalContainer}
+                >  
+                    
+                    <div id='trumpApproval'
+                        className="p-5 w-4/5 border-2 bg-white shadow-lg rounded-lg bg-white-100"
+                        style={Style.trumpApproval}>  
+                        <h1 className="font-bold text-2xl pt-1 pb-8">Trump Approval Ratings</h1> 
+                    </div>
 
-            </div>
+                    <div
+                        className='ml-5 p-5 border-2 text-center bg-white shadow-lg rounded-lg'
+                    >   
+                        <h1 class="font-extrabold text-2xl" id="approve-date">--</h1>
+                        <h3 class="font-bold text-xl">Approval</h3><h3 id='approve'>--%</h3>
+                        <h3 class="font-bold text-xl">Disapproval</h3><h3 id='disapprove'>--%</h3>
+                        <h3 class="font-bold text-xl">Weekly Change</h3><h3 id='week-change'>--%</h3>
+                        <h3 class="font-bold text-xl">Monthly Change</h3><h3 id='month-change'>--%</h3>
+                    </div>
+
+                </div>
+                {nytObj ? <News nytObj={nytObj} startDate={startDate} endDate={endDate} /> : console.log('loading nyt data')}
+                    
+                </>
         )
     };
 

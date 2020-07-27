@@ -20,7 +20,7 @@ export default class Approval extends Component{
     constructor(props) {
 		super(props);
         this.state = {
-            width: window.innerWidth - 60,
+            width: window.innerWidth -40,
             height: 0,
             w: window.innerWidth,
             h: 0,
@@ -29,10 +29,10 @@ export default class Approval extends Component{
                 height: this.h
             })
         };
-
-        this.updateMax= this.updateMax.bind(this)
-        this.updateMin= this.updateMin.bind(this)
-        this.filterData= this.filterData.bind(this)
+        this.nytData = this.nytData.bind(this);
+        this.updateMax = this.updateMax.bind(this);
+        this.updateMin = this.updateMin.bind(this);
+        this.filterData = this.filterData.bind(this);
     }
     
     async componentDidMount() {
@@ -45,25 +45,13 @@ export default class Approval extends Component{
         })
     };
 
-    fetchedData = async (url) => {
-        let response = await fetch(url)
-        let data = await response.json();
-        if (data.ok) {
-            return data;
-        } else {
-            console.warn('issue with fetchdedData() ', data);
-            return;
-        }
-    };
-
-    async nytData() {
-        const startDate = this.props.startDate ? this.props.startDate : new Date();
-        let end = startDate.getFullYear() + (startDate.getMonth() + 1 < 10 ? `0${startDate.getMonth() + 1}` : startDate.getMonth() + 1) + startDate.getDate();
-        let start = end - 7
-
-        console.log('here')
+    async nytData(clickDate = new Date()) {
+        console.log(clickDate)
+        let end = clickDate.getFullYear() + (clickDate.getMonth() + 1 < 10 ? `0${clickDate.getMonth() + 1}` : clickDate.getMonth() + 1) + clickDate.getDate();
+        let start = `${end - 7}`
         
-        let url = `https://api.nytimes.com/svc/archive/v1/2019/1.json?q=trump&news_desk=Politics&source="The New York Times"&begin_date=${start}&end_date=${end}&api-key=${p().nyt}`;
+        let url = `https://api.nytimes.com/svc/search/v2/articlesearch.json?begin_date=${start}&end_date=${end}&q=trump&sort=relevance&api-key=${p().nyt}`
+
 
         let data = await axios.get(cors_noDate(url), {
             headers: {
@@ -72,16 +60,17 @@ export default class Approval extends Component{
         }).then(arr => {
             return arr.data.response.docs
         }).then(arr => {
-            arr.map(el => el.photo = el.multimedia.length > 3)    
+            arr.map(el => el.photo = el.multimedia.length > 3)  
             return arr
         })
         
         await this.setState({
             isLoading: false,
             nytObj: data.slice(0, 10),
-            startDate: startDate,
-            endDate: startDate.setDate(startDate.getDate() + 7)
+            startDate: start,
+            endDate: end
         });
+        return data;
     };
 
     async filterData(event) {
@@ -138,7 +127,7 @@ export default class Approval extends Component{
     }
 
     processData = async () => {
-        let csvParse = await d3.csv(await 'https://projects.fivethirtyeight.com/trump-approval-data/approval_topline.csv', data => {
+        let csvParse = await d3.csv(await `https://projects.fivethirtyeight.com/trump-approval-data/approval_topline.csv`, data => {
             return {
                 subgroup: data.subgroup,
                 old_date: data.modeldate,
@@ -150,25 +139,24 @@ export default class Approval extends Component{
         let csvSort = await csvParse.sort((a, b) => a.modeldate - b.modeldate);
         this.setData(await csvSort)
         let final = await this.percentChange(await csvSort)
-        console.log(await final)
         return await final;
     };
 
     chartRender = async (data, id, div) => {
         const filtered = await data.filter(data => data.subgroup == "All polls");
         const flength = await filtered.length;
-        const width = this.state.width  
+        const width = this.state.width  * .7
         const height = 250;
 
         this.setState({ flength: flength });
 
         let svgChart = d3.select(div)
             .append('svg')
-            .attr("width", width)
+            .attr("width", width + 20)
             .attr("height", height)
             .attr('id', 'svgChart')
+            .attr('class', 'flex mx-auto')
       
-        
         // approval render
         svgChart.selectAll('circle')
             .data(filtered)
@@ -177,7 +165,7 @@ export default class Approval extends Component{
             .enter()
             .append('circle')
             .attr("cx", (d, i) => {
-                return ((((i) * (width / flength)) ) + 10 ) * .71;
+                return ((((i) * (width / flength)) ) + 10 );
             })
             .attr("cy", (d) => {
                 return ((100 - d.approve_estimate) * (height / 100)) - 40;
@@ -198,6 +186,15 @@ export default class Approval extends Component{
                 d3.select(this).attr("r", d => 2)
                 return 
             })
+            .on('click', d => {
+                this.nytData(d.statDate).then(response => {
+                    if (response.ok) {
+                        return response
+                    } else {
+                        alert('issue fetching data')
+                    }
+                })
+            })
             .enter()
             .data(filtered)
             .attr("class", d => id + '_' + d.subgroup)
@@ -205,7 +202,7 @@ export default class Approval extends Component{
             .enter()
             .append('circle')
             .attr("cx", (d, i) => {
-                return ((((i) * (width / flength)) ) + 10) * .71;
+                return ((((i) * (width / flength)) ) + 10);
             })
             .attr("cy", (d) => {
                 return ((100 - d.disapprove_estimate) * (height / 100)) - 40;
@@ -224,19 +221,8 @@ export default class Approval extends Component{
             .on("mouseout", function () {
                 d3.select(this).attr("r", d => 2)
                 return
-            });
-    };
-
-
-    handleMouseOver() {  
-        d3.select(this)
-            .attr("r", d => 10)
-     };
-
-    handleMouseOut(d, i) {
-        // Use D3 to select element, change color back to normal
-        d3.select(this)
-            .attr("r", d => 2);
+            })
+            .on('click', d => this.nytData(d.statDate));
     };
 
     updateMin(ev) {
@@ -253,10 +239,8 @@ export default class Approval extends Component{
         })
     }
     
-
     render() {
         const { nytObj, startDate, endDate } = this.state; 
-       
         return (
             <>
                 <div
@@ -282,7 +266,7 @@ export default class Approval extends Component{
                     </div>
 
                 </div>
-                {nytObj ? <News nytObj={nytObj} startDate={startDate} endDate={endDate} /> : console.log('loading nyt data')}
+                {nytObj ? <News nytObj={nytObj} startDate={startDate} endDate={endDate} /> : ''}
                     
                 </>
         )

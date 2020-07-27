@@ -15,7 +15,7 @@
     "react-compound-slider": "^2.5.0",
     "react-d3-library": "^1.1.8",
     "react-dom": "^16.13.1",
-    "react-scripts": "^3.4.1",
+    "react-scripts": "3.4.1",
     "tailwindcss": "^1.5.1"
   },
   "scripts": {

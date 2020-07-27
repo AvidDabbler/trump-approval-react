@@ -22,13 +22,13 @@ class Article extends Component {
         return (
             <div className='article p-3 flex flex-row' key={k}>
                 {el.photo ? 
-                <div className='w-1/3'><img src={`https://www.nytimes.com/${el.multimedia[4].url}`} className='w-4/5 pt-3 content-center m-auto'></img></div> 
+                <div className='w-64'><img src={`https://www.nytimes.com/${el.multimedia[4].url}`} className='w-4/5 pt-3 content-center m-auto max-w-xs'></img></div> 
                 : 
                 '' }
                 
-                <div className={el.photo ? 'w-2/3 flex flex-col' : 'w-100 flex flex-col'}>
-                    <h1 className='font-bold text-lg'>{el.headline.print_headline}</h1>
-                    <h1 className='font-bold'>{el.pub_date.split('T')[0]}</h1>
+                <div className={el.photo ? 'w-2/3 flex flex-col mt-3' : 'w-100 flex flex-col mt-3'}>
+                    <h1 className='font-bold text-2xl'>{el.headline.print_headline}</h1>
+                    <h1 className='font-bold text-xl'>{el.pub_date.split('T')[0]}</h1>
                     <h1 className='font-bold'>{el.byline.original}</h1>
                     <h1>{el.snippet}</h1>
                 </div>

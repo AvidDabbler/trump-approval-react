@@ -95,18 +95,20 @@ export default class Dashboard extends Component {
         return twitterOBJ[`year${year}`] ? twitterOBJ[`year${year}`] : await axiosTwitter(`http://www.trumptwitterarchive.com/data/realdonaldtrump/${year}.json`)
     };
 
-    async filterTwitter(data, start, end) {
+    async filterTwitter(tweets, start, end) {
         let startIndex, endIndex;
         let i = 0;
-        while (data[i].created_at != start) {
+        console.log(tweets[i]) // returns
+        while (new Date(tweets[i].created_at) != start) { // error
             i++
         }
         startIndex = i;
-        while (data[i].created_at <= end) {
+        while (new Date(tweets[i].created_at) <= end) {
             i++
+            console.log(i)
         }
         endIndex = i;
-        return data.slice(startIndex, endIndex)
+        return tweets.slice(startIndex, endIndex)
     }
     
     async twitterData(clickDate = new Date()) {
@@ -118,14 +120,17 @@ export default class Dashboard extends Component {
             } else {
                 let endYear = await this.getTwitter(end.getFullYear())
                 let startYear = await this.getTwitter(start.getFullYear())
-                return await[startYear[0], endYear[0]];
+                return await startYear.concat(await endYear);
             }
         };
-        console.log(await yearData(end, start));
-        // await this.setState({
-        //     twitterOBJ: this.filterTwitter(await yearData(end, start), start, end),
-        //     twitterLoading: false
-        // });
+
+        const data = await yearData(end, start);
+        const filteredTweets = await this.filterTwitter(await data, start, end);
+
+        await this.setState({
+            twitterOBJ: await filteredTweets,
+            twitterLoading: false
+        });
         
     };
 

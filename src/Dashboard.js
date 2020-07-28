@@ -6,6 +6,17 @@ import { p, cors_noDate } from './private.js';
 import News from './News.js';
 
 
+// Twitter data
+import year2017 from './data/2017.json';
+import year2018 from './data/2018.json';
+import year2019 from './data/2019.json';
+
+let twitterOBJ = {
+    year2017: year2017,
+    year2018: year2018,
+    year2019: year2019,
+};
+
 /*
 
 todo: add in weekly and monthly percent changes on mouseover
@@ -16,11 +27,11 @@ todo: pass click props to News to filter articles
 
 const s = d3.select("body")
     
-export default class Approval extends Component{
+export default class Dashboard extends Component {
     constructor(props) {
-		super(props);
+        super(props);
         this.state = {
-            width: window.innerWidth -40,
+            width: window.innerWidth - 40,
             height: 0,
             w: window.innerWidth,
             h: 0,
@@ -36,13 +47,16 @@ export default class Approval extends Component{
     }
     
     async componentDidMount() {
-        let data = await this.processData();
-        await this.nytData();
-        this.chartRender(await data, 'approve', "#trumpApproval");
         this.setState({
             min: this.state.minDate,
-            max: this.state.maxDate
+            max: this.state.maxDate,
+            twitterLoading: true,
+            nytLoading: true,
         })
+        let data = await this.processData();
+        await this.nytData();
+        await this.twitterData();
+        this.chartRender(await data, 'approve', "#trumpApproval");
     };
 
     async nytData(clickDate = new Date()) {
@@ -60,17 +74,59 @@ export default class Approval extends Component{
         }).then(arr => {
             return arr.data.response.docs
         }).then(arr => {
-            arr.map(el => el.photo = el.multimedia.length > 3)  
+            arr.map(el => el.photo = el.multimedia.length > 3)
             return arr
         })
         
         await this.setState({
-            isLoading: false,
+            nytLoading: false,
             nytObj: data.slice(0, 10),
             startDate: start,
             endDate: end
         });
         return data;
+    };
+
+    async getTwitter(year) {
+        const axiosTwitter = async (url) => {
+            let data = await axios.get(cors_noDate(url))
+            return await data.data;
+        }
+        return twitterOBJ[`year${year}`] ? twitterOBJ[`year${year}`] : await axiosTwitter(`http://www.trumptwitterarchive.com/data/realdonaldtrump/${year}.json`)
+    };
+
+    async filterTwitter(data, start, end) {
+        let startIndex, endIndex;
+        let i = 0;
+        while (data[i].created_at != start) {
+            i++
+        }
+        startIndex = i;
+        while (data[i].created_at <= end) {
+            i++
+        }
+        endIndex = i;
+        return data.slice(startIndex, endIndex)
+    }
+    
+    async twitterData(clickDate = new Date()) {
+        const end = new Date(clickDate);
+        const start = new Date(clickDate.setTime(clickDate.getTime() - ((24 * 60 * 60 * 1000) * 5)));
+        const yearData = async (end, start) => {
+            if (end.getFullYear() == start.getFullYear()) {
+                return await this.getTwitter(end.getFullYear())
+            } else {
+                let endYear = await this.getTwitter(end.getFullYear())
+                let startYear = await this.getTwitter(start.getFullYear())
+                return await[startYear[0], endYear[0]];
+            }
+        };
+        console.log(await yearData(end, start));
+        // await this.setState({
+        //     twitterOBJ: this.filterTwitter(await yearData(end, start), start, end),
+        //     twitterLoading: false
+        // });
+        
     };
 
     async filterData(event) {
@@ -95,8 +151,7 @@ export default class Approval extends Component{
               (dd>9 ? '' : '0') + dd
             ].join('-');
     };
-  
-    
+     
     setDates(data) {
         data.map(el => {
             el['statDate'] = new Date(el.old_date);
@@ -148,6 +203,16 @@ export default class Approval extends Component{
         const width = this.state.width  * .7
         const height = 250;
 
+        const clickCircle = (d) => {
+            this.nytData(d.statDate).then(response => {
+                if (response.ok) {
+                    return response
+                } else {
+                    clickCircle(d)
+                }
+            })
+        };
+
         this.setState({ flength: flength });
 
         let svgChart = d3.select(div)
@@ -165,13 +230,13 @@ export default class Approval extends Component{
             .enter()
             .append('circle')
             .attr("cx", (d, i) => {
-                return ((((i) * (width / flength)) ) + 10 );
+                return ((((i) * (width / flength))) + 10);
             })
             .attr("cy", (d) => {
                 return ((100 - d.approve_estimate) * (height / 100)) - 40;
 
             })
-            .attr("r", d => 3) 
+            .attr("r", d => 3)
 
             .style("fill", d => 'red')
             .on("mouseover", function (d) {
@@ -184,17 +249,9 @@ export default class Approval extends Component{
             })
             .on("mouseout", function () {
                 d3.select(this).attr("r", d => 2)
-                return 
+                return
             })
-            .on('click', d => {
-                this.nytData(d.statDate).then(response => {
-                    if (response.ok) {
-                        return response
-                    } else {
-                        alert('issue fetching data')
-                    }
-                })
-            })
+            .on('click', d => clickCircle(d) )
             .enter()
             .data(filtered)
             .attr("class", d => id + '_' + d.subgroup)
@@ -202,7 +259,7 @@ export default class Approval extends Component{
             .enter()
             .append('circle')
             .attr("cx", (d, i) => {
-                return ((((i) * (width / flength)) ) + 10);
+                return ((((i) * (width / flength))) + 10);
             })
             .attr("cy", (d) => {
                 return ((100 - d.disapprove_estimate) * (height / 100)) - 40;
@@ -222,7 +279,7 @@ export default class Approval extends Component{
                 d3.select(this).attr("r", d => 2)
                 return
             })
-            .on('click', d => this.nytData(d.statDate));
+            .on('click', d => clickCircle(d) )
     };
 
     updateMin(ev) {
@@ -252,12 +309,10 @@ export default class Approval extends Component{
                     <div id='trumpApproval'
                         className="p-5 w-4/5 border-2 bg-white shadow-lg rounded-lg bg-white-100"
                         style={Style.trumpApproval}>  
-                        <h1 className="font-bold text-2xl pt-1 pb-8">Trump Approval Ratings</h1> 
+                        <h1 className="font-bold text-2xl pt-1 pb-8">Trump Approval Ratings</h1>
                     </div>
 
-                    <div
-                        className='ml-5 p-5 border-2 text-center bg-white shadow-lg rounded-lg'
-                    >   
+                    <div className='ml-5 p-5 border-2 text-center bg-white shadow-lg rounded-lg'>   
                         <h1 class="font-extrabold text-2xl" id="approve-date">--</h1>
                         <h3 class="font-bold text-xl">Approval</h3><h3 id='approve'>--%</h3>
                         <h3 class="font-bold text-xl">Disapproval</h3><h3 id='disapprove'>--%</h3>

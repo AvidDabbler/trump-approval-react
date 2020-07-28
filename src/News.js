@@ -1,4 +1,3 @@
-
 import React, { Component } from 'react';
 
 const yyyymmdd = (date) => {
@@ -44,18 +43,6 @@ export default class News extends Component {
             
         };
     }
-
-    componentDidMount() {
-       
-    }
-
-    articles = () => {
-        return (
-            this.props.nytObj.map((el, k) => (
-                <Article el={el} k={k} />
-            ))
-        )
-    };
         
     render() {
         const prevNYT = this.state.nytArticles;
@@ -68,14 +55,12 @@ export default class News extends Component {
                 id="events"
                 className="w-100 border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden p-5 my-6">
                 
-                <h1 className="font-bold text-2xl pt-1 pb-8">Events</h1>
-                <h1 className="font-bold text-2xl pt-1 pb-8">{yyyymmdd(startDate)} - {yyyymmdd(endDate)}</h1>
+                <h1 className="font-bold text-2xl pl-5 pt-5">Events</h1>
+                <h1 className="font-bold text-2xl pl-5 pt-2 pb-8">{yyyymmdd(startDate)} - {yyyymmdd(endDate)}</h1>
 
                 <div id="events-list" className="overflow-y-auto" style={style.eventsList}>
 
-                {this.props.nytObj.map((el, k) => (
-                <Article el={el} k={k} />
-                ))}
+                {this.props.nytObj.map((el, k) =>  <Article el={el} k={k} /> )}
 
                 </div>
             </div>

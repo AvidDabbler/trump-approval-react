@@ -3,15 +3,15 @@ import './App.css';
 import Style from './Style.js';
 
 
-import Approval from './Approval';
+import Dashboard from './Dashboard.js';
 import News from './News.js'
 
 function App() {
     return (
         <div id='main' className="bg-gray-100 p-4">
-            <Approval
+            <Dashboard
                 className=''
-                width='90%'
+                width='100%'
                 height='100' />
         </div>
     );

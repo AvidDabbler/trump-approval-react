@@ -31,10 +31,10 @@ export default class Dashboard extends Component {
             height: 0,
             w: window.innerWidth,
             h: 0,
-            s: d3.select("body").append("svg").attr({
-                width: this.w,
-                height: this.h
-            })
+            // s: d3.select("body").append("svg").attr({
+            //     width: this.w,
+            //     height: this.h
+            // })
         };
         this.nytData = this.nytData.bind(this);
         this.updateMax = this.updateMax.bind(this);
@@ -119,7 +119,7 @@ export default class Dashboard extends Component {
             }
             return list
         }
-        let list = await arr().sort((a,b) => a.created_at + b.created_at )
+        let list = await arr().sort((a,b) => a.created_at - b.created_at )
         return list
     };
 
@@ -250,13 +250,8 @@ export default class Dashboard extends Component {
             .attr("id", d => id + '_' + d.modeldate)
             .enter()
             .append('circle')
-            .attr("cx", (d, i) => {
-                return ((((i) * (width / flength))) + 10);
-            })
-            .attr("cy", (d) => {
-                return ((100 - d.approve_estimate) * (height / 100)) - 40;
-
-            })
+            .attr("cx", (d, i) => ( ( ( (i) * (width / flength) ) ) + 10) )
+            .attr("cy", (d) =>  ((100 - d.approve_estimate) * (height / 100)) - 40 )
             .attr("r", d => 3)
 
             .style("fill", d => 'red')
@@ -279,12 +274,8 @@ export default class Dashboard extends Component {
             .attr("id", d => id + '_' + d.modeldate)
             .enter()
             .append('circle')
-            .attr("cx", (d, i) => {
-                return ((((i) * (width / flength))) + 10);
-            })
-            .attr("cy", (d) => {
-                return ((100 - d.disapprove_estimate) * (height / 100)) - 40;
-            })
+            .attr("cx", (d, i) => ( ( ( (i) * (width / flength) ) ) + 10) )
+            .attr("cy", (d) =>  ((100 - d.disapprove_estimate) * (height / 100)) - 40 )
             .attr("r", d => 3)
             .style("fill", d => 'blue')
             .on("mouseover", function (d) {
@@ -321,35 +312,34 @@ export default class Dashboard extends Component {
         const { nytObj, startDate, endDate, twitterOBJ } = this.state; 
         console.log(twitterOBJ)
         return (
-            <>
-                <div
-                    id='approvalContainer'
-                    className="w-100 flex flex-row"
-                    style={this.approvalContainer}
-                >  
-                    
-                    <div id='trumpApproval'
-                        className="p-5 w-4/5 border-2 bg-white shadow-lg rounded-lg bg-white-100"
-                        style={Style.trumpApproval}>  
-                        <h1 className="font-bold text-2xl pt-1 pb-8">Trump Approval Ratings</h1>
+            <React.Fragment>
+                    <div
+                        id='approvalContainer'
+                        className="w-100 flex flex-row"
+                        style={this.approvalContainer}
+                    >  
+                        
+                        <div id='trumpApproval'
+                            className="p-5 w-4/5 border-2 bg-white shadow-lg rounded-lg bg-white-100"
+                            style={Style.trumpApproval}>  
+                            <h1 className="font-bold text-2xl pt-1 pb-8">Trump Approval Ratings</h1>
+                        </div>
+
+                        <div className='w-1/5 ml-5 p-5 border-2 text-center bg-white shadow-lg rounded-lg'>   
+                            <h1 className="font-extrabold text-2xl" id="approve-date">--</h1>
+                            <h3 className="font-bold text-xl">Approval</h3><h3 id='approve'>--%</h3>
+                            <h3 className="font-bold text-xl">Disapproval</h3><h3 id='disapprove'>--%</h3>
+                            <h3 className="font-bold text-xl">Weekly Change</h3><h3 id='week-change'>--%</h3>
+                            <h3 className="font-bold text-xl">Monthly Change</h3><h3 id='month-change'>--%</h3>
+                        </div>
+
                     </div>
-
-                    <div className='ml-5 p-5 border-2 text-center bg-white shadow-lg rounded-lg'>   
-                        <h1 className="font-extrabold text-2xl" id="approve-date">--</h1>
-                        <h3 className="font-bold text-xl">Approval</h3><h3 id='approve'>--%</h3>
-                        <h3 className="font-bold text-xl">Disapproval</h3><h3 id='disapprove'>--%</h3>
-                        <h3 className="font-bold text-xl">Weekly Change</h3><h3 id='week-change'>--%</h3>
-                        <h3 className="font-bold text-xl">Monthly Change</h3><h3 id='month-change'>--%</h3>
-                    </div>
-
+                    <div id='info-container' className='w-100 flex flex-row'>
+                        {nytObj ? <News nytObj={nytObj} startDate={startDate} endDate={endDate} /> : ''}
+                        {twitterOBJ ? <Twitter twitterOBJ={twitterOBJ} startDate={startDate} endDate={endDate} /> : ''}
                 </div>
-                <div id='info-container' className='w-100 flex flex-row'>
-                    {nytObj ? <News nytObj={nytObj} startDate={startDate} endDate={endDate} /> : ''}
-                    {twitterOBJ ? <Twitter twitterOBJ={twitterOBJ} startDate={startDate} endDate={endDate} /> : ''}
-
-                </div>
-                    
-                </>
+            
+            </React.Fragment>
         )
     };
 

@@ -53,7 +53,7 @@ export default class News extends Component {
         return (
             <div
                 id="events"
-                className="w-50 border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden p-5 my-6">
+                className="w-1/2 border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden p-5 mr-5 mt-5">
                 
                 <h1 className="font-bold text-2xl pl-5 pt-5">Events</h1>
                 <h1 className="font-bold text-2xl pl-5 pt-2 pb-8">{yyyymmdd(startDate)} - {yyyymmdd(endDate)}</h1>
@@ -71,6 +71,6 @@ export default class News extends Component {
 
 const style = {
     eventsList: {
-        height: '100vh'
+        height: '80vh'
     }
 }

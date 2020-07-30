@@ -10,8 +10,8 @@ function App() {
     return (
         <div id='main' className="bg-gray-100 p-4">
             <Dashboard
-                className=''
-                width='100%'
+                className='w-4/5'
+                width='80hw'
                 height='100' />
         </div>
     );

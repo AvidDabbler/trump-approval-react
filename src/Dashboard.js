@@ -4,25 +4,21 @@ import Style from './Style.js';
 import * as axios from 'axios';
 import { p, cors_noDate } from './private.js';
 import News from './News.js';
+import Twitter from './Twitter.js';
 
 
 // Twitter data
 import year2017 from './data/2017.json';
 import year2018 from './data/2018.json';
 import year2019 from './data/2019.json';
+import year2020 from './data/2020.json';
 
 let twitterOBJ = {
     year2017: year2017,
     year2018: year2018,
     year2019: year2019,
+    year2020: year2020,
 };
-
-/*
-
-todo: add in weekly and monthly percent changes on mouseover
-todo: pass click props to News to filter articles 
- 
-*/
 
 
 const s = d3.select("body")
@@ -66,73 +62,92 @@ export default class Dashboard extends Component {
         
         let url = `https://api.nytimes.com/svc/search/v2/articlesearch.json?begin_date=${start}&end_date=${end}&q=trump&sort=relevance&api-key=${p().nyt}`
 
+        const media = arr => {
+            arr.map(el => el.photo = el.multimedia.length > 3)
+            return arr
+        }
 
-        let data = await axios.get(cors_noDate(url), {
+        let arr = await axios.get(cors_noDate(url), {
             headers: {
                 "X-Requested-With": "XMLHttpRequest"
             },
         }).then(arr => {
-            return arr.data.response.docs
-        }).then(arr => {
-            arr.map(el => el.photo = el.multimedia.length > 3)
             return arr
         })
+
+        if(await arr.data.response == 400){
+            console.log('400')
+            return;
+        }else {
+            arr = await media(arr.data.response.docs)
+        }
         
         await this.setState({
             nytLoading: false,
-            nytObj: data.slice(0, 10),
+            nytObj: await arr.slice(0, 10),
             startDate: start,
             endDate: end
         });
-        return data;
+
+        return await arr;
     };
 
-    async getTwitter(year) {
+
+
+    // requests twitter data from archive and trump tweets site
+    async getTwitter(year, start, end) {
         const axiosTwitter = async (url) => {
-            let data = await axios.get(cors_noDate(url))
-            return await data.data;
+            let data = await axios.get(cors_noDate(url)) 
+            // .then(data =>this.twitterDates(data.data))
+            .then(data=>this.filterTwitter(data, start, end))
+
+            return await data;
         }
-        return twitterOBJ[`year${year}`] ? twitterOBJ[`year${year}`] : await axiosTwitter(`http://www.trumptwitterarchive.com/data/realdonaldtrump/${year}.json`)
+
+        return this.filterTwitter(twitterOBJ[`year${year}`], start, end) 
     };
 
+    // filter's and sorts tweets by dates
     async filterTwitter(tweets, start, end) {
-        let startIndex, endIndex;
-        let i = 0;
-        console.log(tweets[i]) // returns
-        while (new Date(tweets[i].created_at) != start) { // error
-            i++
+        const arr = () => {
+            let list = []
+            for(let i = 0; i < tweets.length; i++){
+            tweets[i]['created_at'] = new Date(tweets[i]['created_at'])
+            if (tweets[i].created_at > start & tweets[i].created_at < end){ 
+                list.push(tweets[i])
+             }
+            }
+            return list
         }
-        startIndex = i;
-        while (new Date(tweets[i].created_at) <= end) {
-            i++
-            console.log(i)
-        }
-        endIndex = i;
-        return tweets.slice(startIndex, endIndex)
-    }
-    
+        let list = await arr().sort((a,b) => a.created_at + b.created_at )
+        return list
+    };
+
+    // return twitter data and assigns state's twitterOBJ
     async twitterData(clickDate = new Date()) {
         const end = new Date(clickDate);
         const start = new Date(clickDate.setTime(clickDate.getTime() - ((24 * 60 * 60 * 1000) * 5)));
         const yearData = async (end, start) => {
             if (end.getFullYear() == start.getFullYear()) {
-                return await this.getTwitter(end.getFullYear())
+                return await this.getTwitter(end.getFullYear(), start, end)
             } else {
-                let endYear = await this.getTwitter(end.getFullYear())
-                let startYear = await this.getTwitter(start.getFullYear())
+                let endYear = await this.getTwitter(end.getFullYear(), start, end)
+                let startYear = await this.getTwitter(start.getFullYear(), start, end)
                 return await startYear.concat(await endYear);
             }
         };
 
-        const data = await yearData(end, start);
-        const filteredTweets = await this.filterTwitter(await data, start, end);
-
+        const twitterOBJ = await yearData(end, start);
+        // const filteredTweets = await this.filterTwitter(await data, start, end);
         await this.setState({
-            twitterOBJ: await filteredTweets,
+            twitterOBJ: await twitterOBJ,
             twitterLoading: false
         });
         
     };
+
+
+
 
     async filterData(event) {
         event.preventDefault();
@@ -209,13 +224,14 @@ export default class Dashboard extends Component {
         const height = 250;
 
         const clickCircle = (d) => {
-            this.nytData(d.statDate).then(response => {
-                if (response.ok) {
-                    return response
-                } else {
-                    clickCircle(d)
+            this.nytData(d.statDate).then(async response => {
+                if(response.status == 400) {
+                    console.log('400')
+                    return
                 }
+                    return await response
             })
+            this.twitterData(d.statDate)
         };
 
         this.setState({ flength: flength });
@@ -302,7 +318,8 @@ export default class Dashboard extends Component {
     }
     
     render() {
-        const { nytObj, startDate, endDate } = this.state; 
+        const { nytObj, startDate, endDate, twitterOBJ } = this.state; 
+        console.log(twitterOBJ)
         return (
             <>
                 <div
@@ -318,15 +335,19 @@ export default class Dashboard extends Component {
                     </div>
 
                     <div className='ml-5 p-5 border-2 text-center bg-white shadow-lg rounded-lg'>   
-                        <h1 class="font-extrabold text-2xl" id="approve-date">--</h1>
-                        <h3 class="font-bold text-xl">Approval</h3><h3 id='approve'>--%</h3>
-                        <h3 class="font-bold text-xl">Disapproval</h3><h3 id='disapprove'>--%</h3>
-                        <h3 class="font-bold text-xl">Weekly Change</h3><h3 id='week-change'>--%</h3>
-                        <h3 class="font-bold text-xl">Monthly Change</h3><h3 id='month-change'>--%</h3>
+                        <h1 className="font-extrabold text-2xl" id="approve-date">--</h1>
+                        <h3 className="font-bold text-xl">Approval</h3><h3 id='approve'>--%</h3>
+                        <h3 className="font-bold text-xl">Disapproval</h3><h3 id='disapprove'>--%</h3>
+                        <h3 className="font-bold text-xl">Weekly Change</h3><h3 id='week-change'>--%</h3>
+                        <h3 className="font-bold text-xl">Monthly Change</h3><h3 id='month-change'>--%</h3>
                     </div>
 
                 </div>
-                {nytObj ? <News nytObj={nytObj} startDate={startDate} endDate={endDate} /> : ''}
+                <div id='info-container' className='w-100 flex flex-row'>
+                    {nytObj ? <News nytObj={nytObj} startDate={startDate} endDate={endDate} /> : ''}
+                    {twitterOBJ ? <Twitter twitterOBJ={twitterOBJ} startDate={startDate} endDate={endDate} /> : ''}
+
+                </div>
                     
                 </>
         )

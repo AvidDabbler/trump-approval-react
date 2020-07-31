@@ -32,7 +32,7 @@ export default class Twitter extends Component {
  
     render() {
         return (
-            <div id='tweets' className="w-1/2 border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden p-5 mt-5">
+            <div id='tweets' className="w-1/2 border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden">
                 <h1 className="font-bold text-2xl pl-5 pt-5">Tweets</h1>
                 <div className="overflow-y-auto" style={style.eventsList}>
                     {this.props.twitterOBJ.map((el) => <Tweet el={el} k={el.id_str} />)}

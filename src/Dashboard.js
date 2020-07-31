@@ -315,7 +315,7 @@ export default class Dashboard extends Component {
             <React.Fragment>
                     <div
                         id='approvalContainer'
-                        className="w-100 flex flex-row"
+                        className="w-100 flex flex-row mb-5"
                         style={this.approvalContainer}
                     >  
                         
@@ -334,10 +334,10 @@ export default class Dashboard extends Component {
                         </div>
 
                     </div>
-                    <div id='info-container' className='w-100 flex flex-row'>
+                    <div id='info-container' className='w-100 flex flex-row border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden p-5 m-5">'>
                         {nytObj ? <News nytObj={nytObj} startDate={startDate} endDate={endDate} /> : ''}
                         {twitterOBJ ? <Twitter twitterOBJ={twitterOBJ} startDate={startDate} endDate={endDate} /> : ''}
-                </div>
+                    </div>
             
             </React.Fragment>
         )

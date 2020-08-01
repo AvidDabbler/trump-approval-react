@@ -1,8 +1,6 @@
 import React from 'react';
 import './App.css';
 import Style from './Style.js';
-
-
 import Dashboard from './Dashboard.js';
 import News from './News.js'
 

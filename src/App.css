@@ -46,6 +46,11 @@
   /* display:flex; */
   justify-content: center;
 }
+#info-container{
+  height: 100vh,
+}
+
+
 .tooltip{
   fill: #61dafb;
 }

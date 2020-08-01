@@ -36,7 +36,7 @@ class Article extends Component {
     }
 }
 
-export default class News extends Component {
+class News extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -46,7 +46,6 @@ export default class News extends Component {
         
     render() {
         const prevNYT = this.state.nytArticles;
-
         const { startDate, endDate } = this.props;
         
 
@@ -74,3 +73,5 @@ const style = {
         height: '80vh'
     }
 }
+
+export { Article, News };

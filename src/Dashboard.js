@@ -3,8 +3,9 @@ import * as d3 from 'd3';
 import Style from './Style.js';
 import * as axios from 'axios';
 import { p, cors_noDate } from './private.js';
-import News from './News.js';
-import Twitter from './Twitter.js';
+import { News } from './News.js';
+import { Twitter } from './Twitter.js';
+import Feed from './Feed.js';
 
 
 // Twitter data
@@ -31,12 +32,10 @@ export default class Dashboard extends Component {
             height: 0,
             w: window.innerWidth,
             h: 0,
-            // s: d3.select("body").append("svg").attr({
-            //     width: this.w,
-            //     height: this.h
-            // })
+
         };
         this.nytData = this.nytData.bind(this);
+        this.twitterData = this.twitterData.bind(this);
         this.updateMax = this.updateMax.bind(this);
         this.updateMin = this.updateMin.bind(this);
         this.filterData = this.filterData.bind(this);
@@ -50,13 +49,13 @@ export default class Dashboard extends Component {
             nytLoading: true,
         })
         let data = await this.processData();
-        await this.nytData();
-        await this.twitterData();
         this.chartRender(await data, 'approve', "#trumpApproval");
+        this.feedData(new Date());
     };
 
-    async nytData(clickDate = new Date()) {
-        console.log(clickDate)
+    async nytData(clickDate) {
+        console.log('twitter', clickDate)
+
         let end = clickDate.getFullYear() + (clickDate.getMonth() + 1 < 10 ? `0${clickDate.getMonth() + 1}` : clickDate.getMonth() + 1) + clickDate.getDate();
         let start = `${end - 7}`
         
@@ -96,13 +95,6 @@ export default class Dashboard extends Component {
 
     // requests twitter data from archive and trump tweets site
     async getTwitter(year, start, end) {
-        const axiosTwitter = async (url) => {
-            let data = await axios.get(cors_noDate(url)) 
-            // .then(data =>this.twitterDates(data.data))
-            .then(data=>this.filterTwitter(data, start, end))
-
-            return await data;
-        }
 
         return this.filterTwitter(twitterOBJ[`year${year}`], start, end) 
     };
@@ -124,7 +116,7 @@ export default class Dashboard extends Component {
     };
 
     // return twitter data and assigns state's twitterOBJ
-    async twitterData(clickDate = new Date()) {
+    async twitterData(clickDate) {
         const end = new Date(clickDate);
         const start = new Date(clickDate.setTime(clickDate.getTime() - ((24 * 60 * 60 * 1000) * 5)));
         const yearData = async (end, start) => {
@@ -143,12 +135,66 @@ export default class Dashboard extends Component {
             twitterOBJ: await twitterOBJ,
             twitterLoading: false
         });
+        return twitterOBJ
         
     };
 
 
 
 
+
+
+    // start of combining data to add to feed
+    async nytFeedFormat(clickDate) {
+        let articles = await this.nytData(clickDate);
+        articles.forEach(art => art['date'] = new Date(new Date(art.pub_date)));
+        return await articles;
+    };
+    
+    async twitterFeedFormat(clickDate) {
+        let tweets = await this.twitterData(clickDate);
+        console.log(await tweets)
+        let offset = -400; 
+        await tweets.forEach(tweet => tweet['date'] = new Date(tweet.created_at))
+        return await tweets
+    };
+
+    async feedData(clickDate = new Date()) {
+
+        const span = (parseInt(this.state.startDate) - parseInt(this.state.endDate));
+
+        // creates a list of dates that make up the span of time
+        let dateList = () => {
+            let list = [];
+            let date = parseInt(this.state.startDate);
+            for (let i = 0; i < span; i++) {
+                list.push(new Date(date));
+            }
+            return list;
+        };
+
+        // pulls in the twitter and nyt data and formats them
+        let twitter = await this.twitterFeedFormat(clickDate);
+        let nyt = await this.nytFeedFormat(clickDate);
+        let feed = await twitter.concat(nyt)
+        await feed.sort((a, b) => a.date + b.date)
+
+        this.setState({ feedOBJ: await feed })
+        
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+    // start of fivethrity eight data manipulation
     async filterData(event) {
         event.preventDefault();
         let { trumpApproval, min, max } = this.state;
@@ -231,7 +277,7 @@ export default class Dashboard extends Component {
                 }
                     return await response
             })
-            this.twitterData(d.statDate)
+            this.feedData(d.statDate)
         };
 
         this.setState({ flength: flength });
@@ -309,35 +355,36 @@ export default class Dashboard extends Component {
     }
     
     render() {
-        const { nytObj, startDate, endDate, twitterOBJ } = this.state; 
-        console.log(twitterOBJ)
+        const { nytObj, startDate, endDate, twitterOBJ, feedOBJ } = this.state; 
+        console.log(feedOBJ)
         return (
             <React.Fragment>
-                    <div
-                        id='approvalContainer'
-                        className="w-100 flex flex-row mb-5"
-                        style={this.approvalContainer}
-                    >  
-                        
-                        <div id='trumpApproval'
-                            className="p-5 w-4/5 border-2 bg-white shadow-lg rounded-lg bg-white-100"
-                            style={Style.trumpApproval}>  
-                            <h1 className="font-bold text-2xl pt-1 pb-8">Trump Approval Ratings</h1>
-                        </div>
-
-                        <div className='w-1/5 ml-5 p-5 border-2 text-center bg-white shadow-lg rounded-lg'>   
-                            <h1 className="font-extrabold text-2xl" id="approve-date">--</h1>
-                            <h3 className="font-bold text-xl">Approval</h3><h3 id='approve'>--%</h3>
-                            <h3 className="font-bold text-xl">Disapproval</h3><h3 id='disapprove'>--%</h3>
-                            <h3 className="font-bold text-xl">Weekly Change</h3><h3 id='week-change'>--%</h3>
-                            <h3 className="font-bold text-xl">Monthly Change</h3><h3 id='month-change'>--%</h3>
-                        </div>
-
+                <div
+                    id='approvalContainer'
+                    className="w-100 flex flex-row mb-5"
+                    style={this.approvalContainer}
+                >  
+                    <div id='trumpApproval'
+                        className="p-5 w-4/5 border-2 bg-white shadow-lg rounded-lg bg-white-100"
+                        style={Style.trumpApproval}>  
+                        <h1 className="font-bold text-2xl pt-1 pb-8">Trump Approval Ratings</h1>
                     </div>
-                    <div id='info-container' className='w-100 flex flex-row border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden p-5 m-5">'>
-                        {nytObj ? <News nytObj={nytObj} startDate={startDate} endDate={endDate} /> : ''}
-                        {twitterOBJ ? <Twitter twitterOBJ={twitterOBJ} startDate={startDate} endDate={endDate} /> : ''}
+
+                    <div className='w-1/5 ml-5 p-5 border-2 text-center bg-white shadow-lg rounded-lg'>   
+                        <h1 className="font-extrabold text-2xl" id="approve-date">--</h1>
+                        <h3 className="font-bold text-xl">Approval</h3><h3 id='approve'>--%</h3>
+                        <h3 className="font-bold text-xl">Disapproval</h3><h3 id='disapprove'>--%</h3>
+                        <h3 className="font-bold text-xl">Weekly Change</h3><h3 id='week-change'>--%</h3>
+                        <h3 className="font-bold text-xl">Monthly Change</h3><h3 id='month-change'>--%</h3>
                     </div>
+                </div>
+                    
+                    
+                <div
+                    id='info-container'
+                    className='w-100 border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden'>
+                        {feedOBJ ? <Feed feedOBJ={feedOBJ} startDate={startDate} endDate={endDate}/> : ''}
+                </div>
             
             </React.Fragment>
         )

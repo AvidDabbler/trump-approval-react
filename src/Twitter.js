@@ -25,12 +25,12 @@ class Tweet extends Component {
 };
 
 
-export default class Twitter extends Component {
+class Twitter extends Component {
     constructor(props) {
         super(props);
     }
- 
     render() {
+
         return (
             <div id='tweets' className="w-1/2 border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden">
                 <h1 className="font-bold text-2xl pl-5 pt-5">Tweets</h1>
@@ -47,3 +47,5 @@ const style = {
         height: '80vh'
     }
 }
+
+export { Tweet, Twitter };

@@ -13,6 +13,9 @@ const Style = {
     },
     news: {
         height:500
+    },
+    feed: {
+        height: '100vh'
     }
 }
 

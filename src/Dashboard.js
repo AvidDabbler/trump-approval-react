@@ -14,7 +14,7 @@ import year2018 from './data/2018.json';
 import year2019 from './data/2019.json';
 import year2020 from './data/2020.json';
 
-let twitterOBJ = {
+let twitterRaw = {
     year2017: year2017,
     year2018: year2018,
     year2019: year2019,
@@ -53,13 +53,23 @@ export default class Dashboard extends Component {
         this.feedData(new Date());
     };
 
-    async nytData(clickDate) {
-        console.log('twitter', clickDate)
 
-        let end = clickDate.getFullYear() + (clickDate.getMonth() + 1 < 10 ? `0${clickDate.getMonth() + 1}` : clickDate.getMonth() + 1) + clickDate.getDate();
-        let start = `${end - 7}`
+
+
+
+
+    async nytData(clickDate = new Date()) {
         
-        let url = `https://api.nytimes.com/svc/search/v2/articlesearch.json?begin_date=${start}&end_date=${end}&q=trump&sort=relevance&api-key=${p().nyt}`
+        let e = parseInt(`${clickDate.getFullYear()}${clickDate.getMonth() + 1 < 10 ? `0` + (clickDate.getMonth() + 1) : clickDate.getMonth() + 1}${clickDate.getDate() < 10 ? '0' + clickDate.getDate() : clickDate.getDate()}`)
+        let sDate = clickDate;
+        console.log(sDate.setDate(sDate.getDate() - 7))
+        let s = parseInt(`${sDate.getFullYear()}${clickDate.getMonth()+1 < 10 ? `0`+ (sDate.getMonth()+1) : sDate.getMonth()+1}${(sDate.getDate()) < 10 ? '0' + (sDate.getDate()) : (sDate.getDate())}`)
+
+        console.log(e)
+        console.log(s)
+
+        let url = `https://api.nytimes.com/svc/search/v2/articlesearch.json?begin_date=${s}&end_date=${e}&q=trump&sort=relevance&api-key=${p().nyt}`
+        console.log(url)
 
         const media = arr => {
             arr.map(el => el.photo = el.multimedia.length > 3)
@@ -72,71 +82,82 @@ export default class Dashboard extends Component {
             },
         }).then(arr => {
             return arr
+        }).then(async arr => {
+            if(await arr.data.response == 400){
+                console.log('400')
+                return;
+            }
+            console.log(arr)
+            let list = arr.data.response.docs
+            let final = () => {
+                list.forEach(art => {
+                    art['photo'] = art.multimedia.length > 3;
+                    art['date'] = new Date(new Date(art.pub_date));
+                })
+                return list
+            }
+            console.log(await final())
+            return await final()
         })
 
-        if(await arr.data.response == 400){
-            console.log('400')
-            return;
-        }else {
-            arr = await media(arr.data.response.docs)
-        }
-        
+
+
         await this.setState({
             nytLoading: false,
-            nytObj: await arr.slice(0, 10),
-            startDate: start,
-            endDate: end
+            nytObj: await arr,
+            startDate: s,
+            endDate: e
         });
 
         return await arr;
+
+    };
+
+    nytFeedFormat(art) {
+        art['photo'] = art.multimedia.length > 3;
+        art['date'] = new Date(new Date(art.pub_date));
     };
 
 
-
-    // requests twitter data from archive and trump tweets site
-    async getTwitter(year, start, end) {
-
-        return this.filterTwitter(twitterOBJ[`year${year}`], start, end) 
-    };
 
     // filter's and sorts tweets by dates
     async filterTwitter(tweets, start, end) {
         const arr = () => {
             let list = []
             for(let i = 0; i < tweets.length; i++){
-            tweets[i]['created_at'] = new Date(tweets[i]['created_at'])
-            if (tweets[i].created_at > start & tweets[i].created_at < end){ 
+            tweets[i]['date'] = new Date(tweets[i]['created_at'])
+            if (tweets[i].date > start & tweets[i].date < end){ 
                 list.push(tweets[i])
              }
             }
             return list
         }
-        let list = await arr().sort((a,b) => a.created_at - b.created_at )
-        return list
+        return await arr();
     };
 
     // return twitter data and assigns state's twitterOBJ
-    async twitterData(clickDate) {
+    async twitterData(clickDate = new Date()) {
         const end = new Date(clickDate);
         const start = new Date(clickDate.setTime(clickDate.getTime() - ((24 * 60 * 60 * 1000) * 5)));
+
+        // get year or years of tweets
         const yearData = async (end, start) => {
             if (end.getFullYear() == start.getFullYear()) {
-                return await this.getTwitter(end.getFullYear(), start, end)
+                return await this.filterTwitter(twitterRaw[`year${end.getFullYear()}`], start, end)
             } else {
-                let endYear = await this.getTwitter(end.getFullYear(), start, end)
-                let startYear = await this.getTwitter(start.getFullYear(), start, end)
+                let endYear = await this.filterTwitter(twitterRaw[`year${end.getFullYear()}`], start, end)
+                let startYear = await this.filterTwitter(twitterRaw[`year${start.getFullYear()}`], start, end)
                 return await startYear.concat(await endYear);
             }
         };
-
+        
         const twitterOBJ = await yearData(end, start);
-        // const filteredTweets = await this.filterTwitter(await data, start, end);
+
         await this.setState({
             twitterOBJ: await twitterOBJ,
             twitterLoading: false
         });
-        return twitterOBJ
-        
+        return await twitterOBJ
     };
 
 
@@ -144,42 +165,17 @@ export default class Dashboard extends Component {
 
 
 
-    // start of combining data to add to feed
-    async nytFeedFormat(clickDate) {
-        let articles = await this.nytData(clickDate);
-        articles.forEach(art => art['date'] = new Date(new Date(art.pub_date)));
-        return await articles;
-    };
-    
-    async twitterFeedFormat(clickDate) {
-        let tweets = await this.twitterData(clickDate);
-        console.log(await tweets)
-        let offset = -400; 
-        await tweets.forEach(tweet => tweet['date'] = new Date(tweet.created_at))
-        return await tweets
-    };
+
 
     async feedData(clickDate = new Date()) {
-
-        const span = (parseInt(this.state.startDate) - parseInt(this.state.endDate));
-
-        // creates a list of dates that make up the span of time
-        let dateList = () => {
-            let list = [];
-            let date = parseInt(this.state.startDate);
-            for (let i = 0; i < span; i++) {
-                list.push(new Date(date));
-            }
-            return list;
-        };
-
         // pulls in the twitter and nyt data and formats them
-        let twitter = await this.twitterFeedFormat(clickDate);
-        let nyt = await this.nytFeedFormat(clickDate);
+        let twitter = await this.twitterData();
+        let nyt = await this.nytData();
+        console.log(nyt)
         let feed = await twitter.concat(nyt)
-        await feed.sort((a, b) => a.date + b.date)
+        let ffeed = await feed.sort((a, b) => new Date(a.date) + new Date(b.date))
 
-        this.setState({ feedOBJ: await feed })
+        this.setState({ feedOBJ: await ffeed })
         
     };
 
@@ -209,8 +205,8 @@ export default class Dashboard extends Component {
     };
   
     yyyymmdd(date) {
-      var mm = date.getMonth() + 1; // getMonth() is zero-based
-      var dd = date.getDate();
+      var mm = (date.getMonth()+1) < 10 ? `0${date.getMonth() + 1}` : `${date.getMonth() + 1}`; // getMonth() is zero-based
+      var dd = date.getDate() < 10 ? `0${date.getMonth() + 1}` : `${date.getMonth() + 1}`;
     
       return [date.getFullYear(),
               (mm>9 ? '' : '0') + mm,
@@ -355,8 +351,7 @@ export default class Dashboard extends Component {
     }
     
     render() {
-        const { nytObj, startDate, endDate, twitterOBJ, feedOBJ } = this.state; 
-        console.log(feedOBJ)
+        const { startDate, endDate, feedOBJ } = this.state; 
         return (
             <React.Fragment>
                 <div
@@ -378,6 +373,7 @@ export default class Dashboard extends Component {
                         <h3 className="font-bold text-xl">Monthly Change</h3><h3 id='month-change'>--%</h3>
                     </div>
                 </div>
+
                     
                     
                 <div

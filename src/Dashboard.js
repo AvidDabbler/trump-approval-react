@@ -61,18 +61,12 @@ export default class Dashboard extends Component {
     async nytData(nytD) {
         let date = new Date(nytD);
         
-        console.log(nytD)
-
         let e = parseInt(`${date.getFullYear()}${date.getMonth() + 1 < 10 ? `0` + (date.getMonth() + 1) : date.getMonth() + 1}${date.getDate() < 10 ? '0' + date.getDate() : date.getDate()}`);
         let sDate = date;
-        console.log(sDate.setDate(sDate.getDate() - 7))
+        sDate.setDate(sDate.getDate() - 7)
         let s = parseInt(`${sDate.getFullYear()}${sDate.getMonth()+1 < 10 ? `0`+ (sDate.getMonth()+1) : sDate.getMonth()+1}${(sDate.getDate()) < 10 ? '0' + (sDate.getDate()) : (sDate.getDate())}`)
 
-        console.log(e)
-        console.log(s)
-
         let url = `https://api.nytimes.com/svc/search/v2/articlesearch.json?begin_date=${s}&end_date=${e}&q=trump&sort=relevance&api-key=${p().nyt}`
-        console.log(url)
 
         const media = arr => {
             arr.map(el => el.photo = el.multimedia.length > 3)
@@ -90,7 +84,6 @@ export default class Dashboard extends Component {
                 console.log('400')
                 return;
             }
-            console.log(arr)
             let list = arr.data.response.docs
             let final = () => {
                 list.forEach(art => {
@@ -99,7 +92,6 @@ export default class Dashboard extends Component {
                 })
                 return list
             }
-            console.log(await final())
             return await final()
         })
 
@@ -165,11 +157,9 @@ export default class Dashboard extends Component {
 
 
     async feedData(d = new Date()) {
-        console.log(d)
         // pulls in the twitter and nyt data and formats them
         let twitter = await this.twitterData(new Date(d));
         let nyt = await this.nytData(new Date(d));
-        console.log(nyt)
         let feed = await twitter.concat(nyt)
         let ffeed = await feed.sort((a, b) => new Date(b.date) - new Date(a.date))
 
@@ -368,7 +358,11 @@ export default class Dashboard extends Component {
                     
                 <div
                     id='info-container'
-                    className='w-100 border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden'>
+                    className='w-100 border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden'
+                    style={{height:'100vh'}}
+                >
+                    <h1>News & Tweets</h1>
+                    <h1>{startDate} - {endDate}</h1>
                         {feedOBJ ? <Feed feedOBJ={feedOBJ} startDate={startDate} endDate={endDate}/> : ''}
                 </div>
             

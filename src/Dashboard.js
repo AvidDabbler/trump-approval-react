@@ -161,19 +161,13 @@ export default class Dashboard extends Component {
     };
 
 
-
-
-
-
-
-
     async feedData(clickDate = new Date()) {
         // pulls in the twitter and nyt data and formats them
         let twitter = await this.twitterData();
         let nyt = await this.nytData();
         console.log(nyt)
         let feed = await twitter.concat(nyt)
-        let ffeed = await feed.sort((a, b) => new Date(a.date) + new Date(b.date))
+        let ffeed = await feed.sort((a, b) => new Date(b.date) - new Date(a.date))
 
         this.setState({ feedOBJ: await ffeed })
         

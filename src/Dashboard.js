@@ -58,12 +58,15 @@ export default class Dashboard extends Component {
 
 
 
-    async nytData(clickDate = new Date()) {
+    async nytData(nytD) {
+        let date = new Date(nytD);
         
-        let e = parseInt(`${clickDate.getFullYear()}${clickDate.getMonth() + 1 < 10 ? `0` + (clickDate.getMonth() + 1) : clickDate.getMonth() + 1}${clickDate.getDate() < 10 ? '0' + clickDate.getDate() : clickDate.getDate()}`)
-        let sDate = clickDate;
+        console.log(nytD)
+
+        let e = parseInt(`${date.getFullYear()}${date.getMonth() + 1 < 10 ? `0` + (date.getMonth() + 1) : date.getMonth() + 1}${date.getDate() < 10 ? '0' + date.getDate() : date.getDate()}`);
+        let sDate = date;
         console.log(sDate.setDate(sDate.getDate() - 7))
-        let s = parseInt(`${sDate.getFullYear()}${clickDate.getMonth()+1 < 10 ? `0`+ (sDate.getMonth()+1) : sDate.getMonth()+1}${(sDate.getDate()) < 10 ? '0' + (sDate.getDate()) : (sDate.getDate())}`)
+        let s = parseInt(`${sDate.getFullYear()}${sDate.getMonth()+1 < 10 ? `0`+ (sDate.getMonth()+1) : sDate.getMonth()+1}${(sDate.getDate()) < 10 ? '0' + (sDate.getDate()) : (sDate.getDate())}`)
 
         console.log(e)
         console.log(s)
@@ -161,10 +164,11 @@ export default class Dashboard extends Component {
     };
 
 
-    async feedData(clickDate = new Date()) {
+    async feedData(d = new Date()) {
+        console.log(d)
         // pulls in the twitter and nyt data and formats them
-        let twitter = await this.twitterData();
-        let nyt = await this.nytData();
+        let twitter = await this.twitterData(new Date(d));
+        let nyt = await this.nytData(new Date(d));
         console.log(nyt)
         let feed = await twitter.concat(nyt)
         let ffeed = await feed.sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -172,14 +176,6 @@ export default class Dashboard extends Component {
         this.setState({ feedOBJ: await ffeed })
         
     };
-
-
-
-
-
-
-
-
 
 
 

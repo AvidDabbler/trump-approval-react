@@ -15,7 +15,7 @@ export default class Feed extends Component {
         console.log(this.props)
         return (
             <div
-                className='w-100 p-5 m-5 overflow-y-scroll'
+                className='w-100 overflow-y-scroll'
             >
                 
                 {this.props.feedOBJ.map((el,k) => el.abstract ? <Article el={el} k={k} /> : <Tweet el={el} k={k} />)}

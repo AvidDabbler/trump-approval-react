@@ -163,7 +163,16 @@ export default class Dashboard extends Component {
         let feed = await twitter.concat(nyt)
         let ffeed = await feed.sort((a, b) => new Date(b.date) - new Date(a.date))
 
-        this.setState({ feedOBJ: await ffeed })
+        this.setState({
+            feedOBJ: await ffeed
+        })
+
+        let date = (d) => {
+            const dateString = `${d}`
+            return dateString.slice(4, 6) + '/' + dateString.slice(6, 8) + '/' + dateString.slice(0, 4)
+        };
+
+        document.getElementById('feed-dates').textContent = `${date(this.state.startDate)} - ${date(this.state.endDate)}`  
         
     };
 
@@ -332,6 +341,7 @@ export default class Dashboard extends Component {
     
     render() {
         const { startDate, endDate, feedOBJ } = this.state; 
+
         return (
             <React.Fragment>
                 <div
@@ -358,11 +368,11 @@ export default class Dashboard extends Component {
                     
                 <div
                     id='info-container'
-                    className='w-100 border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden'
+                    className='w-100 border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden p-8'
                     style={{height:'100vh'}}
                 >
-                    <h1>News & Tweets</h1>
-                    <h1>{startDate} - {endDate}</h1>
+                    <h1 id='feed-title' className='font-extrabold text-2xl px-8'>News & Tweets</h1>
+                    <h1 id = 'feed-dates' className='font-extrabold text-xl px-8'>mm/dd/yyyy - mm/dd/yyyy</h1>
                         {feedOBJ ? <Feed feedOBJ={feedOBJ} startDate={startDate} endDate={endDate}/> : ''}
                 </div>
             

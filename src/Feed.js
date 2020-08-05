@@ -15,10 +15,11 @@ export default class Feed extends Component {
         console.log(this.props)
         return (
             <div
-                className='w-100 overflow-y-scroll'
+                className='w-100 overflow-y-scroll mb-5'
+                style={{height: '80vh'}}
             >
                 
-                {this.props.feedOBJ.map((el,k) => el.abstract ? <Article el={el} k={k} /> : <Tweet el={el} k={k} />)}
+                {this.props.feedOBJ.map((el, k) => el.abstract ? <Article el={el} k={k} /> : <Tweet el={el} k={k} />)}
             </div>
         )
     }

@@ -129,3 +129,4 @@ yarn-error.log*
 # custom
 
 spec.yaml
+private.js

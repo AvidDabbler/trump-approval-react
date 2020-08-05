@@ -8,17 +8,17 @@ import { Twitter } from './Twitter.js';
 import Feed from './Feed.js';
 
 
-// Twitter data
-import year2017 from './data/2017.json';
-import year2018 from './data/2018.json';
-import year2019 from './data/2019.json';
-import year2020 from './data/2020.json';
+// // Twitter data
+// import year2017 from 'https://trump-approval-tweets.s3.us-east-1.amazonaws.com/2017.json';
+// import year2018 from 'https://trump-approval-tweets.s3.us-east-1.amazonaws.com/2018.json';
+// import year2019 from 'https://trump-approval-tweets.s3.us-east-1.amazonaws.com/2019.json';
+// import year2020 from 'https://trump-approval-tweets.s3.us-east-1.amazonaws.com/2020.json';
 
 let twitterRaw = {
-    year2017: year2017,
-    year2018: year2018,
-    year2019: year2019,
-    year2020: year2020,
+    year2017: 'https://trump-approval-tweets.s3.us-east-1.amazonaws.com/2017.json',
+    year2018: 'https://trump-approval-tweets.s3.us-east-1.amazonaws.com/2018.json',
+    year2019: 'https://trump-approval-tweets.s3.us-east-1.amazonaws.com/2019.json',
+    year2020: 'https://trump-approval-tweets.s3.us-east-1.amazonaws.com/2020.json',
 };
 
 
@@ -68,11 +68,6 @@ export default class Dashboard extends Component {
 
         let url = `https://api.nytimes.com/svc/search/v2/articlesearch.json?begin_date=${s}&end_date=${e}&q=trump&sort=relevance&api-key=${p().nyt}`
 
-        const media = arr => {
-            arr.map(el => el.photo = el.multimedia.length > 3)
-            return arr
-        }
-
         let arr = await axios.get(cors_noDate(url), {
             headers: {
                 "X-Requested-With": "XMLHttpRequest"
@@ -95,8 +90,6 @@ export default class Dashboard extends Component {
             return await final()
         })
 
-
-
         await this.setState({
             nytLoading: false,
             nytObj: await arr,
@@ -113,10 +106,9 @@ export default class Dashboard extends Component {
         art['date'] = new Date(new Date(art.pub_date));
     };
 
-
-
     // filter's and sorts tweets by dates
     async filterTwitter(tweets, start, end) {
+        console.log(tweets)
         const arr = () => {
             let list = []
             for(let i = 0; i < tweets.length; i++){
@@ -133,15 +125,27 @@ export default class Dashboard extends Component {
     // return twitter data and assigns state's twitterOBJ
     async twitterData(clickDate = new Date()) {
         const end = new Date(clickDate);
-        const start = new Date(clickDate.setTime(clickDate.getTime() - ((24 * 60 * 60 * 1000) * 5)));
+        const start = new Date(clickDate.setTime(clickDate.getTime() - ((24 * 60 * 60 * 1000) * 7)));
+
+        let twitterRaw = async (year) => {
+            return await axios.get(cors_noDate(cors_noDate(`https://www.walterkjenkins.com/data/trump-approval/${year}-tweets.json`)), {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+            }).then(arr => {
+                console.log('tweets', arr.data)
+                return arr.data
+            })
+        }
 
         // get year or years of tweets
         const yearData = async (end, start) => {
             if (end.getFullYear() == start.getFullYear()) {
-                return await this.filterTwitter(twitterRaw[`year${end.getFullYear()}`], start, end)
+                console.log( start, end)
+                return await this.filterTwitter(await twitterRaw(end.getFullYear()), start, end)
             } else {
-                let endYear = await this.filterTwitter(twitterRaw[`year${end.getFullYear()}`], start, end)
-                let startYear = await this.filterTwitter(twitterRaw[`year${start.getFullYear()}`], start, end)
+                let endYear = await this.filterTwitter(twitterRaw(end.getFullYear()), start, end)
+                let startYear = await this.filterTwitter(twitterRaw(start.getFullYear()), start, end)
                 return await startYear.concat(await endYear);
             }
         };
@@ -152,6 +156,7 @@ export default class Dashboard extends Component {
             twitterOBJ: await twitterOBJ,
             twitterLoading: false
         });
+        console.log(await twitterOBJ)
         return await twitterOBJ
     };
 
@@ -361,6 +366,7 @@ export default class Dashboard extends Component {
                         <h3 className="font-bold text-xl">Disapproval</h3><h3 id='disapprove'>--%</h3>
                         <h3 className="font-bold text-xl">Weekly Change</h3><h3 id='week-change'>--%</h3>
                         <h3 className="font-bold text-xl">Monthly Change</h3><h3 id='month-change'>--%</h3>
+                        <h1>Data Sourced from </h1><a className="hover:text-blue-600 underline" href='https://fivethirtyeight.com'>FiveThirtyEight</a>
                     </div>
                 </div>
 
@@ -369,11 +375,17 @@ export default class Dashboard extends Component {
                 <div
                     id='info-container'
                     className='w-100 border-2 bg-white shadow-lg rounded-lg bg-white-100 overflow-hidden p-8'
-                    style={{height:'100vh'}}
+                    style={{height:'105vh'}}
                 >
                     <h1 id='feed-title' className='font-extrabold text-2xl px-8'>News & Tweets</h1>
                     <h1 id = 'feed-dates' className='font-extrabold text-xl px-8'>mm/dd/yyyy - mm/dd/yyyy</h1>
-                        {feedOBJ ? <Feed feedOBJ={feedOBJ} startDate={startDate} endDate={endDate}/> : ''}
+                    {feedOBJ ? <Feed feedOBJ={feedOBJ} startDate={startDate} endDate={endDate} /> : ''}
+                    <div className="w-100" >
+                        <h1>News from <a className="hover:text-blue-600 underline" href='http://www.nytimes.com/'>The New York Times API</a></h1>
+                        <h1>Tweets from <a className="hover:text-blue-600 underline" href='http://www.trumptwitterarchive.com/'>http://www.trumptwitterarchive.com/</a></h1>
+
+                    </div>
+
                 </div>
             
             </React.Fragment>
